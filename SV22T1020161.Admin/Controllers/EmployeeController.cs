@@ -177,7 +177,7 @@ namespace SV22T1020161.Admin.Controllers
             var employee = await HRDataService.GetEmployeeAsync(id);
             if (employee == null) return RedirectToAction("Index");
             ViewBag.Employee = employee;
-            ViewBag.Title = $"Đổi mật khẩu: {employee.FullName}";
+            ViewBag.Title = "Mật khẩu nhân viên";
             return View();
         }
 
@@ -191,7 +191,7 @@ namespace SV22T1020161.Admin.Controllers
             var employee = await HRDataService.GetEmployeeAsync(id);
             if (employee == null) return RedirectToAction("Index");
             ViewBag.Employee = employee;
-            ViewBag.Title = $"Đổi mật khẩu: {employee.FullName}";
+            ViewBag.Title = "Mật khẩu nhân viên";
 
             if (string.IsNullOrWhiteSpace(newPassword))
                 ModelState.AddModelError(nameof(newPassword), "Vui lòng nhập mật khẩu mới");
@@ -224,7 +224,7 @@ namespace SV22T1020161.Admin.Controllers
             var employee = await HRDataService.GetEmployeeAsync(id);
             if (employee == null) return RedirectToAction("Index");
             ViewBag.Employee = employee;
-            ViewBag.Title = $"Phân quyền: {employee.FullName}";
+            ViewBag.Title = "Phân quyền nhân viên";
             return View();
         }
 

@@ -1,5 +1,28 @@
-﻿@{
-    Layout = null;
+@using System.Linq
+@using SV22T1020161.Models.Catalog
+@{
+    var standalone = ViewData["ProductListAttributesStandalone"] as bool? == true;
+    Layout = standalone ? "_Layout" : null;
+
+    int productId = 0;
+    var attributeList = new List<ProductAttribute>();
+
+    if (Model is Product prod)
+    {
+        productId = prod.ProductID;
+        if (ViewBag.Attributes is IEnumerable<ProductAttribute> fromBag)
+            attributeList = fromBag.ToList();
+    }
+    else if (Model is IList<ProductAttribute> list)
+    {
+        attributeList = list.ToList();
+        productId = ViewBag.ProductID is int pid ? pid : attributeList.FirstOrDefault()?.ProductID ?? 0;
+    }
+    else if (Model is IEnumerable<ProductAttribute> seq)
+    {
+        attributeList = seq.ToList();
+        productId = ViewBag.ProductID is int pid2 ? pid2 : attributeList.FirstOrDefault()?.ProductID ?? 0;
+    }
 }
 <div class="row justify-content-center">
     <div class="col-12">
@@ -13,10 +36,17 @@
                         </h6>
                     </div>
                     <div class="col text-end">
-                        <a class="btn btn-sm btn-primary" href="~/Product/CreateAttribute/123">
-                            <i class="bi bi-plus"></i>
-                            Thêm thuộc tính
-                        </a>
+                        @if (productId > 0)
+                        {
+                            <a class="btn btn-sm btn-primary" href="~/Product/CreateAttribute/@productId">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Thêm thuộc tính
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted small align-middle">Lưu mặt hàng trước khi thêm thuộc tính</span>
+                        }
                     </div>
                 </div>
             </div>
@@ -32,21 +62,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @for (int i = 1; i <= 10; i++)
+                        @if (attributeList.Count == 0)
                         {
                             <tr>
-                                <td>Màu sắc</td>
-                                <td>Đỏ</td>
-                                <td class="text-center">@i</td>
-                                <td class="text-center text-nowrap">
-                                    <a class="btn btn-sm btn-primary" href="~/Product/EditAttribute/123?attributeId=456">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <a class="btn btn-sm btn-danger" href="~/Product/DeleteAttribute/123?attributeId=456">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </td>
+                                <td colspan="4" class="text-center text-muted py-4">Chưa có thuộc tính nào.</td>
                             </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in attributeList)
+                            {
+                                <tr>
+                                    <td>@item.AttributeName</td>
+                                    <td>@item.AttributeValue</td>
+                                    <td class="text-center">@item.DisplayOrder</td>
+                                    <td class="text-center text-nowrap">
+                                        <a class="btn btn-sm btn-primary" href="~/Product/EditAttribute/@productId?attributeId=@item.AttributeID" title="Sửa">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a class="btn btn-sm btn-danger" href="~/Product/DeleteAttribute/@productId?attributeId=@item.AttributeID" title="Xóa">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
                         }
                     </tbody>
                 </table>

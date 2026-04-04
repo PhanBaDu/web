@@ -1,4 +1,4 @@
-﻿@{
+@{
 }
 @section PageToolBar {
     <button type="submit" form="formEdit" class="btn btn-primary">
@@ -30,6 +30,7 @@
                                    accept="image/*"
                                    data-img-preview="imgPreview"
                                    onchange="previewImage(this)" />
+                            <div class="form-text">Để trống nếu không muốn thay đổi ảnh. Hỗ trợ: JPG, PNG, GIF, WEBP.</div>
                         </div>
                     </div>
 
@@ -38,7 +39,7 @@
                         <div class="col-sm-9">
                             <img id="imgPreview"
                                  src="~/images/products/nophoto.png"
-                                 class="img-thumbnail"
+                                 class="img-thumbnail bg-light"
                                  style="max-height:200px;" />
                         </div>
                     </div>
@@ -53,12 +54,14 @@
 
                     <div class="row mb-3">
                         <label class="col-sm-3 fw-semibold">Thứ tự hiển thị</label>
-                        <div class="col-sm-3">
+                        <div class="col-sm-9">
                             <input type="number"
                                    name="DisplayOrder"
                                    class="form-control"
                                    value="1"
-                                   min="1" />
+                                   min="0"
+                                   style="max-width: 12rem;" />
+                            <div class="form-text">Số nhỏ hơn sẽ được ưu tiên hiển thị trước.</div>
                         </div>
                     </div>
 
@@ -75,7 +78,7 @@
                                 </label>
                             </div>
                         </div>
-                    </div>                    
+                    </div>
                 </form>
             </div>
         </div>

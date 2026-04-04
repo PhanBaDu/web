@@ -1,4 +1,4 @@
-﻿@{
+@{
 }
 @section PageToolBar {
     <button type="submit" form="formEdit" class="btn btn-primary">
@@ -47,16 +47,18 @@
                         </div>
                     </div>
 
-                    <div class="row mb-4">
+                    <div class="row mb-3">
                         <label class="col-sm-3 fw-semibold">
                             Thứ tự hiển thị
                         </label>
-                        <div class="col-sm-3">
+                        <div class="col-sm-9">
                             <input type="number"
                                    name="DisplayOrder"
                                    class="form-control"
                                    value="1"
-                                   min="1" />
+                                   min="0"
+                                   style="max-width: 12rem;" />
+                            <div class="form-text">Số nhỏ hơn sẽ được ưu tiên hiển thị trước.</div>
                         </div>
                     </div>
                 </form>

@@ -2,42 +2,76 @@
 @{
     ViewBag.Title = "Sửa thuộc tính";
 }
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Sửa thuộc tính: <span class="text-primary">@Model.AttributeName</span></h3>
-    </div>
-    <div class="card-body">
-        <form asp-action="EditAttribute" method="post">
-            <input type="hidden" name="AttributeID" value="@Model.AttributeID" />
-            <input type="hidden" name="ProductID" value="@Model.ProductID" />
+@section PageToolBar {
+    <button type="submit" form="formEdit" class="btn btn-primary">
+        <i class="bi bi-save"></i>
+        Lưu thuộc tính
+    </button>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Tên thuộc tính <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="AttributeName"
-                           value="@Model.AttributeName"
-                           required maxlength="100"
-                           oninvalid="this.setCustomValidity('Vui lòng nhập tên thuộc tính')"
-                           oninput="this.setCustomValidity('')" />
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Giá trị <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="AttributeValue"
-                           value="@Model.AttributeValue"
-                           required maxlength="255"
-                           oninvalid="this.setCustomValidity('Vui lòng nhập giá trị thuộc tính')"
-                           oninput="this.setCustomValidity('')" />
-                </div>
+    <a href="~/Product/Edit/@Model.ProductID#attributes" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-outline card-success">
+            <div class="card-header">
+                <h5 class="mb-0">Thông tin thuộc tính mặt hàng</h5>
             </div>
 
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary me-2">
-                    <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
-                </button>
-                <a asp-action="Edit" asp-route-id="@Model.ProductID" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i> Quay lại sản phẩm
-                </a>
+            <div class="card-body">
+                <form id="formEdit" method="post">
+                    <input type="hidden" name="AttributeID" value="@Model.AttributeID" />
+                    <input type="hidden" name="ProductID" value="@Model.ProductID" />
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 fw-semibold">
+                            Tên thuộc tính
+                        </label>
+                        <div class="col-sm-9">
+                            <input type="text"
+                                   name="AttributeName"
+                                   class="form-control"
+                                   placeholder="Ví dụ: Màu sắc, Kích thước"
+                                   value="@Model.AttributeName"
+                                   required autofocus
+                                   oninvalid="this.setCustomValidity('Vui lòng nhập tên thuộc tính')"
+                                   oninput="this.setCustomValidity('')" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 fw-semibold">
+                            Giá trị thuộc tính
+                        </label>
+                        <div class="col-sm-9">
+                            <input type="text"
+                                   name="AttributeValue"
+                                   class="form-control"
+                                   placeholder="Ví dụ: Đỏ, XL, 500g"
+                                   value="@Model.AttributeValue"
+                                   required
+                                   oninvalid="this.setCustomValidity('Vui lòng nhập giá trị thuộc tính')"
+                                   oninput="this.setCustomValidity('')" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 fw-semibold">
+                            Thứ tự hiển thị
+                        </label>
+                        <div class="col-sm-3">
+                            <input type="number"
+                                   name="DisplayOrder"
+                                   class="form-control"
+                                   value="@(Model.DisplayOrder > 0 ? Model.DisplayOrder.ToString() : "1")"
+                                   min="1" />
+                        </div>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>

@@ -39,7 +39,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Nhà cung cấp</label>
                     <select class="form-select" name="@nameof(Model.SupplierID)">
                         <option value="0">-- Tất cả --</option>
@@ -65,17 +65,17 @@
                     <div class="input-group">
                         <input type="text"
                                name="@nameof(Model.MinPrice)" 
-                               class="form-control"
+                               class="form-control money-input"
                                placeholder="Từ" value="@(Model.MinPrice > 0 ? Model.MinPrice.ToString("0") : "")" />
                         <span class="input-group-text">-</span>
                         <input type="text"
                                name="@nameof(Model.MaxPrice)"
-                               class="form-control"
+                               class="form-control money-input"
                                placeholder="Đến" value="@(Model.MaxPrice > 0 ? Model.MaxPrice.ToString("0") : "")" />
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Tên mặt hàng</label>
                     <div class="input-group">
                         <input id="searchValue" name="SearchValue" type="text"

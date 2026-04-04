@@ -17,6 +17,16 @@ namespace SV22T1020161.Admin.Controllers
     {
         private const int PAGE_SIZE = 12;
         private const string PRODUCT_SEARCH_CONDITION = "ProductSearchCondition";
+        private const string ViewDataKeyListPhotosStandalone = "ProductListPhotosStandalone";
+        private const string ViewDataKeyListAttributesStandalone = "ProductListAttributesStandalone";
+
+        private static IActionResult RedirectToEditWithFragment(Controller controller, int productId, string fragment)
+        {
+            var url = controller.Url.Action(nameof(Edit), values: new { id = productId });
+            if (string.IsNullOrEmpty(url))
+                return controller.RedirectToAction(nameof(Edit), new { id = productId });
+            return controller.LocalRedirect(url + fragment);
+        }
 
         /// <summary>
         /// Giao diện tìm kiếm và hiển thị danh sách mặt hàng.
@@ -150,6 +160,8 @@ namespace SV22T1020161.Admin.Controllers
             ViewBag.Suppliers = await PartnerDataService.ListSuppliersAsync(new PaginationSearchInput { Page = 1, PageSize = 1000 });
             var data = await CatalogDataService.GetProductAsync(id);
             if (data == null) return RedirectToAction("Index");
+            ViewBag.Attributes = await CatalogDataService.ListAttributesAsync(id);
+            ViewBag.Photos = await CatalogDataService.ListPhotosAsync(id);
             return View(data);
         }
 
@@ -157,7 +169,7 @@ namespace SV22T1020161.Admin.Controllers
         /// Xử lý cập nhật thông tin mặt hàng trong cơ sở dữ liệu.
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Edit(Product data)
+        public async Task<IActionResult> Edit(Product data, IFormFile? photoFile)
         {
             if (!ApplicationContext.HasPermission(Permissions.ProductEdit))
                 return RedirectToAction("AccessDenied", "Account");
@@ -176,10 +188,25 @@ namespace SV22T1020161.Admin.Controllers
                 ViewBag.Title = "Cập nhật thông tin mặt hàng";
                 ViewBag.Categories = await CatalogDataService.ListCategoriesAsync(new PaginationSearchInput { Page = 1, PageSize = 1000 });
                 ViewBag.Suppliers = await PartnerDataService.ListSuppliersAsync(new PaginationSearchInput { Page = 1, PageSize = 1000 });
+                ViewBag.Attributes = await CatalogDataService.ListAttributesAsync(data.ProductID);
+                ViewBag.Photos = await CatalogDataService.ListPhotosAsync(data.ProductID);
                 return View(data);
             }
             data.ProductDescription ??= "";
-            data.Photo ??= "";
+            if (photoFile != null && photoFile.Length > 0)
+            {
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(photoFile.FileName ?? ".jpg")}";
+                var filePath = Path.Combine(ApplicationContext.WWWRootPath, "images", "products", fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await photoFile.CopyToAsync(stream);
+                }
+                data.Photo = fileName;
+            }
+            else
+            {
+                data.Photo ??= "";
+            }
             bool result = await CatalogDataService.UpdateProductAsync(data);
             if (!result)
             {
@@ -187,6 +214,8 @@ namespace SV22T1020161.Admin.Controllers
                 ViewBag.Title = "Cập nhật thông tin mặt hàng";
                 ViewBag.Categories = await CatalogDataService.ListCategoriesAsync(new PaginationSearchInput { Page = 1, PageSize = 1000 });
                 ViewBag.Suppliers = await PartnerDataService.ListSuppliersAsync(new PaginationSearchInput { Page = 1, PageSize = 1000 });
+                ViewBag.Attributes = await CatalogDataService.ListAttributesAsync(data.ProductID);
+                ViewBag.Photos = await CatalogDataService.ListPhotosAsync(data.ProductID);
                 return View(data);
             }
             return RedirectToAction("Index");
@@ -249,6 +278,9 @@ namespace SV22T1020161.Admin.Controllers
             var product = await CatalogDataService.GetProductAsync(id);
             if (product == null) return RedirectToAction("Index");
             var attributes = await CatalogDataService.ListAttributesAsync(id);
+            ViewBag.ProductID = id;
+            ViewBag.Title = "Thuộc tính mặt hàng";
+            ViewData[ViewDataKeyListAttributesStandalone] = true;
             return View(attributes);
         }
 
@@ -280,7 +312,7 @@ namespace SV22T1020161.Admin.Controllers
                 return View(data);
             }
             await CatalogDataService.AddAttributeAsync(data);
-            return RedirectToAction("ListAttributes", new { id = data.ProductID });
+            return RedirectToEditWithFragment(this, data.ProductID, "#attributes");
         }
 
         [HttpGet]
@@ -289,7 +321,7 @@ namespace SV22T1020161.Admin.Controllers
             if (!ApplicationContext.HasPermission(Permissions.ProductManageAttribute))
                 return RedirectToAction("AccessDenied", "Account");
             var attribute = await CatalogDataService.GetAttributeAsync(attributeId);
-            if (attribute == null) return RedirectToAction("ListAttributes", new { id });
+            if (attribute == null) return RedirectToEditWithFragment(this, id, "#attributes");
             var product = await CatalogDataService.GetProductAsync(id);
             if (product != null) ViewBag.ProductName = product.ProductName;
             return View(attribute);
@@ -311,7 +343,7 @@ namespace SV22T1020161.Admin.Controllers
                 return View(data);
             }
             await CatalogDataService.UpdateAttributeAsync(data);
-            return RedirectToAction("ListAttributes", new { id = data.ProductID });
+            return RedirectToEditWithFragment(this, data.ProductID, "#attributes");
         }
 
         [HttpGet]
@@ -320,7 +352,7 @@ namespace SV22T1020161.Admin.Controllers
             if (!ApplicationContext.HasPermission(Permissions.ProductManageAttribute))
                 return RedirectToAction("AccessDenied", "Account");
             var attribute = await CatalogDataService.GetAttributeAsync(attributeId);
-            if (attribute == null) return RedirectToAction("ListAttributes", new { id });
+            if (attribute == null) return RedirectToEditWithFragment(this, id, "#attributes");
             var product = await CatalogDataService.GetProductAsync(id);
             if (product != null) ViewBag.ProductName = product.ProductName;
             return View(attribute);
@@ -332,7 +364,7 @@ namespace SV22T1020161.Admin.Controllers
             if (!ApplicationContext.HasPermission(Permissions.ProductManageAttribute))
                 return RedirectToAction("AccessDenied", "Account");
             await CatalogDataService.DeleteAttributeAsync(attributeId);
-            return RedirectToAction("ListAttributes", new { id });
+            return RedirectToEditWithFragment(this, id, "#attributes");
         }
 
         #endregion
@@ -347,6 +379,9 @@ namespace SV22T1020161.Admin.Controllers
             var product = await CatalogDataService.GetProductAsync(id);
             if (product == null) return RedirectToAction("Index");
             var photos = await CatalogDataService.ListPhotosAsync(id);
+            ViewBag.ProductID = id;
+            ViewBag.Title = "Thư viện ảnh";
+            ViewData[ViewDataKeyListPhotosStandalone] = true;
             return View(photos);
         }
 
@@ -383,7 +418,7 @@ namespace SV22T1020161.Admin.Controllers
             }
             var photo = new ProductPhoto() { ProductID = id, Photo = fileName, Description = description ?? "", DisplayOrder = displayOrder, IsHidden = isHidden };
             await CatalogDataService.AddPhotoAsync(photo);
-            return RedirectToAction("ListPhotos", new { id });
+            return RedirectToEditWithFragment(this, id, "#photos");
         }
 
         [HttpGet]
@@ -392,7 +427,7 @@ namespace SV22T1020161.Admin.Controllers
             if (!ApplicationContext.HasPermission(Permissions.ProductManagePhoto))
                 return RedirectToAction("AccessDenied", "Account");
             var photo = await CatalogDataService.GetPhotoAsync(photoId);
-            if (photo == null) return RedirectToAction("ListPhotos", new { id });
+            if (photo == null) return RedirectToEditWithFragment(this, id, "#photos");
             var product = await CatalogDataService.GetProductAsync(id);
             if (product != null) ViewBag.ProductName = product.ProductName;
             return View(photo);
@@ -421,7 +456,7 @@ namespace SV22T1020161.Admin.Controllers
             }
             data.Description ??= "";
             await CatalogDataService.UpdatePhotoAsync(data);
-            return RedirectToAction("ListPhotos", new { id = data.ProductID });
+            return RedirectToEditWithFragment(this, data.ProductID, "#photos");
         }
 
         [HttpGet]
@@ -430,7 +465,7 @@ namespace SV22T1020161.Admin.Controllers
             if (!ApplicationContext.HasPermission(Permissions.ProductManagePhoto))
                 return RedirectToAction("AccessDenied", "Account");
             var photo = await CatalogDataService.GetPhotoAsync(photoId);
-            if (photo == null) return RedirectToAction("ListPhotos", new { id });
+            if (photo == null) return RedirectToEditWithFragment(this, id, "#photos");
             var product = await CatalogDataService.GetProductAsync(id);
             if (product != null) ViewBag.ProductName = product.ProductName;
             return View(photo);
@@ -442,7 +477,7 @@ namespace SV22T1020161.Admin.Controllers
             if (!ApplicationContext.HasPermission(Permissions.ProductManagePhoto))
                 return RedirectToAction("AccessDenied", "Account");
             await CatalogDataService.DeletePhotoAsync(photoId);
-            return RedirectToAction("ListPhotos", new { id });
+            return RedirectToEditWithFragment(this, id, "#photos");
         }
 
         #endregion

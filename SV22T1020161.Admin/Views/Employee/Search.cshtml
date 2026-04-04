@@ -21,7 +21,7 @@
                     <th>Email</th>
                     <th>Địa chỉ</th>
                     <th class="text-center" style="width:120px;">Trạng thái</th>
-                    <th class="text-center" style="width:200px;">Thao tác</th>
+                    <th class="text-center" style="min-width: 11rem;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -47,31 +47,34 @@
                                 <span class="badge bg-danger">Đã nghỉ việc</span>
                             }
                         </td>
-                        <td class="text-center text-nowrap">
-                            @if (ApplicationContext.HasPermission(Permissions.EmployeeEdit))
-                            {
-                                <a href="~/Employee/Edit/@item.EmployeeID" class="btn btn-sm btn-primary" title="Sửa">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            }
-                            @if (ApplicationContext.HasPermission(Permissions.EmployeeChangePassword))
-                            {
-                                <a href="~/Employee/ChangePassword/@item.EmployeeID" class="btn btn-sm btn-warning" title="Đổi mật khẩu">
-                                    <i class="bi bi-key"></i>
-                                </a>
-                            }
-                            @if (ApplicationContext.HasPermission(Permissions.EmployeeAssignRole))
-                            {
-                                <a href="~/Employee/ChangeRole/@item.EmployeeID" class="btn btn-sm btn-info" title="Phân quyền">
-                                    <i class="bi bi-shield-check"></i>
-                                </a>
-                            }
-                            @if (ApplicationContext.HasPermission(Permissions.EmployeeDelete))
-                            {
-                                <a href="~/Employee/Delete/@item.EmployeeID" class="btn btn-sm btn-danger" title="Xóa">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            }
+                        <td class="text-center">
+                            <div class="d-inline-flex flex-wrap gap-1 justify-content-center align-items-center employee-action-btns">
+                                @* Thứ tự: Sửa → Xóa → Đổi mật khẩu → Phân quyền (theo mock ui/) *@
+                                @if (ApplicationContext.HasPermission(Permissions.EmployeeEdit))
+                                {
+                                    <a href="~/Employee/Edit/@item.EmployeeID" class="btn btn-primary rounded-3 d-inline-flex align-items-center justify-content-center p-0 employee-action-btn" title="Sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                }
+                                @if (ApplicationContext.HasPermission(Permissions.EmployeeDelete))
+                                {
+                                    <a href="~/Employee/Delete/@item.EmployeeID" class="btn btn-danger rounded-3 d-inline-flex align-items-center justify-content-center p-0 employee-action-btn" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                }
+                                @if (ApplicationContext.HasPermission(Permissions.EmployeeChangePassword))
+                                {
+                                    <a href="~/Employee/ChangePassword/@item.EmployeeID" class="btn btn-warning rounded-3 d-inline-flex align-items-center justify-content-center p-0 employee-action-btn" title="Đổi mật khẩu">
+                                        <i class="bi bi-key"></i>
+                                    </a>
+                                }
+                                @if (ApplicationContext.HasPermission(Permissions.EmployeeAssignRole))
+                                {
+                                    <a href="~/Employee/ChangeRole/@item.EmployeeID" class="btn btn-info rounded-3 d-inline-flex align-items-center justify-content-center p-0 employee-action-btn" title="Phân quyền">
+                                        <i class="bi bi-shield-check"></i>
+                                    </a>
+                                }
+                            </div>
                         </td>
                     </tr>
                 }
