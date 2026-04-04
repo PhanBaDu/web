@@ -112,7 +112,7 @@ namespace SV22T1020161.Admin.Controllers
         /// Xử lý thêm mới mặt hàng vào cơ sở dữ liệu.
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create(Product data)
+        public async Task<IActionResult> Create(Product data, IFormFile? photoFile)
         {
             if (!ApplicationContext.HasPermission(Permissions.ProductCreate))
                 return RedirectToAction("AccessDenied", "Account");
@@ -134,7 +134,20 @@ namespace SV22T1020161.Admin.Controllers
                 return View(data);
             }
             data.ProductDescription ??= "";
-            data.Photo ??= "";
+            if (photoFile != null && photoFile.Length > 0)
+            {
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(photoFile.FileName ?? ".jpg")}";
+                var filePath = Path.Combine(ApplicationContext.WWWRootPath, "images", "products", fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await photoFile.CopyToAsync(stream);
+                }
+                data.Photo = fileName;
+            }
+            else
+            {
+                data.Photo = "";
+            }
             int id = await CatalogDataService.AddProductAsync(data);
             if (id <= 0)
             {

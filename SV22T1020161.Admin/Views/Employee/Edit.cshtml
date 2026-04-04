@@ -33,13 +33,14 @@
                         <div class="col-sm-5">
                             <input type="text" asp-for="FullName"
                                    class="form-control"
-                                   placeholder="" autofocus />
+                                   placeholder="Nhập họ và tên" autofocus />
                             <span class="text-danger" asp-validation-for="FullName"></span>
                         </div>
                         <label class="col-sm-2 col-form-label text-end">Ngày sinh</label>
                         <div class="col-sm-2">
                             <input type="text" asp-for="BirthDate"
-                                   class="form-control date-picker" />
+                                   class="form-control date-picker"
+                                   placeholder="dd/mm/yyyy" />
                         </div>
                     </div>
 
@@ -48,7 +49,7 @@
                         <div class="col-sm-9">
                             <textarea class="form-control" asp-for="Address"
                                       rows="3"
-                                      placeholder=""></textarea>
+                                      placeholder="Nhập địa chỉ"></textarea>
                         </div>
                     </div>
 
@@ -57,13 +58,13 @@
                         <div class="col-sm-2">
                             <input type="tel" asp-for="Phone"
                                    class="form-control"
-                                   placeholder="" />
+                                   placeholder="Nhập số điện thoại" />
                         </div>
                         <label class="col-sm-1 col-form-label text-end">Email</label>
                         <div class="col-sm-6">
                             <input type="email" asp-for="Email"
                                    class="form-control"
-                                   placeholder="" />
+                                   placeholder="Nhập email" />
                             <span class="text-danger" asp-validation-for="Email"></span>
                         </div>
                     </div>

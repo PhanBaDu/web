@@ -6,7 +6,7 @@
         .Select(r => r.Trim())
         .ToList();
 
-    bool HasRole(string role) => currentRoles.Any(r => r.Equals(role, StringComparison.OrdinalIgnoreCase));
+    bool HasRole(string role) => currentRoles.Contains(role, StringComparer.OrdinalIgnoreCase);
 
     var roleRows = new (string RoleKey, string Title, string Description)[]
     {
@@ -48,14 +48,14 @@
 
                         <dl class="row mb-0">
                             <dt class="col-sm-3">Họ và tên</dt>
-                            <dd class="col-sm-9">@employee.FullName</dd>
+                            <dd class="col-sm-9">@(employee?.FullName ?? "—")</dd>
 
                             <dt class="col-sm-3">Email</dt>
-                            <dd class="col-sm-9">@employee.Email</dd>
+                            <dd class="col-sm-9">@(employee?.Email ?? "—")</dd>
 
                             <dt class="col-sm-3">Trạng thái</dt>
                             <dd class="col-sm-9">
-                                @if (employee.IsWorking)
+                                @if (employee?.IsWorking == true)
                                 {
                                     <span class="badge bg-success">Đang làm việc</span>
                                 }

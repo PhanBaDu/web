@@ -80,7 +80,7 @@ namespace SV22T1020161.Admin.Controllers
             if (string.IsNullOrWhiteSpace(data.CustomerName))
                 ModelState.AddModelError(nameof(data.CustomerName), "Tên khách hàng không được để trống");
             if (string.IsNullOrWhiteSpace(data.ContactName))
-                ModelState.AddModelError(nameof(data.ContactName), "Tên liên hệ không được để trống");
+                ModelState.AddModelError(nameof(data.ContactName), "Tên giao dịch không được để trống");
             if (string.IsNullOrWhiteSpace(data.Email))
                 ModelState.AddModelError(nameof(data.Email), "Email không được để trống");
             if (string.IsNullOrWhiteSpace(data.Province))
@@ -130,7 +130,7 @@ namespace SV22T1020161.Admin.Controllers
             if (string.IsNullOrWhiteSpace(data.CustomerName))
                 ModelState.AddModelError(nameof(data.CustomerName), "Tên khách hàng không được để trống");
             if (string.IsNullOrWhiteSpace(data.ContactName))
-                ModelState.AddModelError(nameof(data.ContactName), "Tên liên hệ không được để trống");
+                ModelState.AddModelError(nameof(data.ContactName), "Tên giao dịch không được để trống");
             if (string.IsNullOrWhiteSpace(data.Email))
                 ModelState.AddModelError(nameof(data.Email), "Email không được để trống");
             if (string.IsNullOrWhiteSpace(data.Province))

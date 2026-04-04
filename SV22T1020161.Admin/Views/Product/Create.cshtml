@@ -113,11 +113,32 @@
                                        type="checkbox"
                                        name="IsSelling"
                                        value="true"
-                                       @(Model.IsSelling ? "checked" : "")
+                                       checked
                                        id="IsSelling" />
                                 <label class="form-check-label" for="IsSelling">
                                     Đang bán
                                 </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Ảnh</label>
+                        <div class="col-sm-9">
+                            <input type="hidden" name="Photo" value="" />
+                            <input type="file"
+                                   class="form-control"
+                                   name="photoFile"
+                                   accept="image/*"
+                                   data-img-preview="imgPreviewProduct"
+                                   onchange="previewImage(this)" />
+                            <div class="form-text">Chọn ảnh đại diện cho mặt hàng. Hỗ trợ: JPG, PNG, GIF, WEBP.</div>
+                            <div class="mt-2">
+                                <img id="imgPreviewProduct"
+                                     src="~/images/products/nophoto.png"
+                                     class="img-thumbnail bg-light"
+                                     style="max-height: 160px;"
+                                     alt="Ảnh đại diện" />
                             </div>
                         </div>
                     </div>

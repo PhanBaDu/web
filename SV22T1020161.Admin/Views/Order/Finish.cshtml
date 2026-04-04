@@ -31,11 +31,11 @@
 </div>
 
 <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-    <form method="post" action="~/Order/Finish/@Model.OrderID" style="display:inline;">
+    <form method="post" action="~/Order/Finish/@Model.OrderID" class="d-inline">
         <input type="hidden" name="confirm" value="yes" />
-        <button type="submit" class="btn btn-success">
+        <button type="submit" class="btn btn-success me-2">
             <i class="bi bi-check-circle me-1"></i> Hoàn tất đơn hàng
         </button>
     </form>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
 </div>

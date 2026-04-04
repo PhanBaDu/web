@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SV22T1020161.Admin;
@@ -80,8 +81,8 @@ namespace SV22T1020161.Admin.Controllers
                 ModelState.AddModelError(nameof(data.ShipperName), "Vui lòng nhập tên người giao hàng");
             if (string.IsNullOrWhiteSpace(data.Phone))
                 ModelState.AddModelError(nameof(data.Phone), "Vui lòng nhập số điện thoại");
-            else if (!System.Text.RegularExpressions.Regex.IsMatch(data.Phone, @"^[0-9]{9,15}$"))
-                ModelState.AddModelError(nameof(data.Phone), "Số điện thoại phải là chữ số, từ 9 đến 15 ký tự");
+            else if (!IsValidShipperPhone(data.Phone))
+                ModelState.AddModelError(nameof(data.Phone), "Số điện thoại không hợp lệ (cần 8–15 chữ số, có thể có dấu chấm hoặc khoảng trắng)");
             if (!ModelState.IsValid)
                 return View(data);
             data.Phone ??= "";
@@ -115,8 +116,8 @@ namespace SV22T1020161.Admin.Controllers
                 ModelState.AddModelError(nameof(data.ShipperName), "Vui lòng nhập tên người giao hàng");
             if (string.IsNullOrWhiteSpace(data.Phone))
                 ModelState.AddModelError(nameof(data.Phone), "Vui lòng nhập số điện thoại");
-            else if (!System.Text.RegularExpressions.Regex.IsMatch(data.Phone, @"^[0-9]{9,15}$"))
-                ModelState.AddModelError(nameof(data.Phone), "Số điện thoại phải là chữ số, từ 9 đến 15 ký tự");
+            else if (!IsValidShipperPhone(data.Phone))
+                ModelState.AddModelError(nameof(data.Phone), "Số điện thoại không hợp lệ (cần 8–15 chữ số, có thể có dấu chấm hoặc khoảng trắng)");
             if (!ModelState.IsValid)
                 return View(data);
             data.Phone ??= "";
@@ -159,6 +160,17 @@ namespace SV22T1020161.Admin.Controllers
                 return RedirectToAction("Delete", new { id = id });
             }
             return RedirectToAction("Index");
+        }
+
+        /// <summary>
+        /// Cho phép định dạng có dấu chấm / khoảng trắng (vd. 0234.3.882.111), kiểm tra theo số chữ số.
+        /// </summary>
+        private static bool IsValidShipperPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone) || phone.Length > 255)
+                return false;
+            var digitCount = phone.Count(char.IsDigit);
+            return digitCount is >= 8 and <= 15;
         }
     }
 }

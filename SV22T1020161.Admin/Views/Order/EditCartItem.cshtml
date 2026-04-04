@@ -6,63 +6,52 @@
     <strong class="modal-title">
         <i class="bi bi-pencil me-2"></i>Cập nhật chi tiết đơn hàng
     </strong>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
 </div>
 
 <div class="modal-body">
-    <div class="container-fluid">
-        <div class="row">
+    <div class="container-fluid px-0">
+        <div class="row align-items-start g-3">
             <div class="col-md-8">
                 <form id="formEditCartItem" method="post" action="~/Order/EditCartItem/@Model.OrderID">
                     <input type="hidden" name="productId" value="@Model.ProductID" />
 
                     <div class="row mb-3 align-items-center">
-                        <label class="col-sm-4 col-form-label fw-semibold">Mặt hàng</label>
-                        <div class="col-sm-8">
-                            <input type="text" class="form-control-plaintext fw-bold" value="@Model.ProductName" readonly />
+                        <label class="col-sm-4 col-md-3 col-form-label fw-semibold mb-0">Mặt hàng</label>
+                        <div class="col-sm-8 col-md-9">
+                            <p class="mb-0 fw-bold py-2">@Model.ProductName</p>
                         </div>
                     </div>
 
                     <div class="row mb-3 align-items-center">
-                        <label class="col-sm-4 col-form-label fw-semibold">Số lượng <span class="text-danger">*</span></label>
-                        <div class="col-sm-4">
+                        <label class="col-sm-4 col-md-3 col-form-label fw-semibold mb-0">Số lượng <span class="text-danger">*</span></label>
+                        <div class="col-sm-8 col-md-5 col-lg-4">
                             <input type="number"
-                                   class="form-control text-center"
+                                   class="form-control text-end"
                                    name="quantity"
                                    value="@Model.Quantity"
                                    min="1" />
                         </div>
                     </div>
 
-                    <div class="row mb-3 align-items-center">
-                        <label class="col-sm-4 col-form-label fw-semibold">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
-                        <div class="col-sm-6">
+                    <div class="row mb-0 align-items-center">
+                        <label class="col-sm-4 col-md-3 col-form-label fw-semibold mb-0">Đơn giá <span class="text-danger">*</span></label>
+                        <div class="col-sm-8 col-md-7 col-lg-6">
                             <div class="input-group">
                                 <input type="text"
-                                       class="form-control text-end fw-bold text-dark money-input"
+                                       class="form-control text-end fw-semibold money-input"
                                        name="salePrice"
                                        value="@Model.SalePrice.ToString("N0")" />
-                                <span class="input-group-text bg-light">₫</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm-8 offset-sm-4">
-                            <div class="alert alert-secondary mb-0 py-2">
-                                <strong>Thành tiền:</strong>
-                                <span class="text-danger fw-bold ms-2" id="itemTotal">
-                                    @((Model.Quantity * Model.SalePrice).ToString("N0")) ₫
-                                </span>
+                                <span class="input-group-text bg-light border">₫</span>
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="col-md-4 text-center">
+            <div class="col-md-4 d-flex justify-content-center justify-content-md-end">
                 <img src="~/images/products/@(string.IsNullOrEmpty(Model.Photo) ? "nophoto.png" : Model.Photo)"
-                     class="img-thumbnail"
-                     style="max-height: 180px;"
+                     class="img-thumbnail border"
+                     style="max-height: 200px; max-width: 100%; object-fit: contain;"
                      alt="@Model.ProductName"
                      onerror="this.src='@Url.Content("~/images/products/nophoto.png")'" />
             </div>
@@ -71,10 +60,10 @@
 </div>
 
 <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-    <button type="submit" form="formEditCartItem" class="btn btn-primary">
-        <i class="bi bi-check me-1"></i> Cập nhật
+    <button type="submit" form="formEditCartItem" class="btn btn-primary me-2">
+        <i class="bi bi-check-lg me-1"></i> Cập nhật
     </button>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
 </div>
 
 @section Scripts {
