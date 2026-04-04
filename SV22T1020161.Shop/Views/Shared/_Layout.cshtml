@@ -6,7 +6,7 @@
     <title>@ViewData["Title"] - SV22T1020161.Shop</title>
     <link rel="stylesheet" href="~/lib/bootstrap/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/material-dashboard.css" />
+    <link rel="stylesheet" href="~/css/material-dashboard.css?v=2" />
     <link rel="stylesheet" href="~/css/site.css" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -17,9 +17,6 @@
         <div class="container">
             <!-- Brand -->
             <a href="/" class="navbar-brand">
-                <span class="brand-icon">
-                    <i class="bi bi-bag-heart-fill"></i>
-                </span>
                 <span>SV22T1020161<span style="color: var(--md-primary);">.</span>Shop</span>
             </a>
 
@@ -30,74 +27,80 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarMain">
-                <!-- Left links -->
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a href="/" class="nav-link @(Context.Request.Path.Value == "/" ? "active" : "")">Trang chủ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/Product" class="nav-link @(Context.Request.Path.Value?.StartsWith("/Product") == true ? "active" : "")">Cửa hàng</a>
-                    </li>
-                    @if (User?.Identity?.IsAuthenticated == true)
-                    {
-                        <li class="nav-item">
-                            <a href="/Order/History" class="nav-link @(Context.Request.Path.Value?.StartsWith("/Order") == true ? "active" : "")">Đơn hàng</a>
-                        </li>
-                    }
-                </ul>
+                <!-- Wrapper for 3-part layout on desktop -->
+                <div class="d-flex flex-column flex-lg-row w-100 align-items-lg-center">
+                    
+                    <!-- Part 1: Left - Links (Takes up remaining space on left) -->
+                    <div class="navbar-part-left flex-lg-grow-1">
+                        <ul class="navbar-nav mb-2 mb-lg-0 align-items-lg-center">
+                            <li class="nav-item">
+                                <a href="/" class="nav-link @(Context.Request.Path.Value == "/" ? "active" : "")">Trang chủ</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/Product" class="nav-link @(Context.Request.Path.Value?.StartsWith("/Product") == true ? "active" : "")">Cửa hàng</a>
+                            </li>
+                            @if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item">
+                                    <a href="/Order/History" class="nav-link @(Context.Request.Path.Value?.StartsWith("/Order") == true ? "active" : "")">Đơn hàng</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
 
-                <!-- Right section -->
-                <div class="d-flex align-items-center gap-2">
-                    <!-- Search -->
-                    <form action="/Product" method="get" class="d-none d-lg-block">
-                        <div class="search-input-wrap">
-                            <i class="bi bi-search search-icon"></i>
-                            <input type="search" name="SearchValue" placeholder="Tìm kiếm sản phẩm..." aria-label="Tìm kiếm">
-                        </div>
-                    </form>
-
-                    <!-- Cart -->
-                    <a href="/Cart" class="cart-btn" title="Giỏ hàng">
-                        <i class="bi bi-cart3" style="font-size: 1.25rem;"></i>
-                        <span id="cart-badge" class="cart-badge" style="display: none;">0</span>
-                    </a>
-
-                    <!-- User Menu -->
-                    @if (User?.Identity?.IsAuthenticated == true)
-                    {
-                        <div class="dropdown user-menu">
-                            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <div class="user-avatar">
-                                    @(User.FindFirst("DisplayName")?.Value?.Substring(0, 1).ToUpper() ?? "U")
+                    <!-- Part 2: Center - Search (Fixed width, centered in flex) -->
+                    <div class="navbar-part-center d-none d-lg-block px-3">
+                        <form action="/Product" method="get" style="width: 440px;">
+                            <div class="search-input-group d-flex align-items-center gap-0">
+                                <div class="search-input-wrap flex-grow-1">
+                                    <i class="bi bi-search search-icon"></i>
+                                    <input type="search" name="SearchValue" class="search-input-md" placeholder="Tìm kiếm sản phẩm..." aria-label="Tìm kiếm" value="@Context.Request.Query["SearchValue"]">
                                 </div>
-                                <span class="d-none d-md-inline">@(User.FindFirst("DisplayName")?.Value)</span>
-                                <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="/Account/Profile">
-                                        <i class="bi bi-person"></i> Tài khoản của tôi
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/Order/History">
-                                        <i class="bi bi-clock-history"></i> Lịch sử đơn hàng
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="/Account/Logout">
-                                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    }
-                    else
-                    {
-                        <a href="/Account/Login" class="btn-auth-login">Đăng nhập</a>
-                        <a href="/Account/Register" class="btn-auth-register">Đăng ký</a>
-                    }
+                                <button type="submit" class="search-btn-md">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Part 3: Right - Actions (Takes up remaining space on right, align right) -->
+                    <div class="navbar-part-right flex-lg-grow-1 d-flex justify-content-lg-end align-items-center gap-2">
+                        <!-- Cart -->
+                        <a href="/Cart" class="cart-btn" title="Giỏ hàng">
+                            <span class="cart-btn-icon-wrap">
+                                <i class="bi bi-cart3" style="font-size: 1.25rem;" aria-hidden="true"></i>
+                                <span id="cart-badge" class="cart-badge" style="display: none;">0</span>
+                            </span>
+                            <span class="cart-btn-label d-none d-md-inline" style="white-space: nowrap;">Giỏ hàng</span>
+                        </a>
+
+                        <!-- User Menu -->
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="dropdown user-menu">
+                                <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="user-avatar">
+                                        @(User.FindFirst("DisplayName")?.Value?.Substring(0, 1).ToUpper() ?? "U")
+                                    </div>
+                                    <span class="d-none d-md-inline">@(User.FindFirst("DisplayName")?.Value)</span>
+                                    <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="/Account/Profile"><i class="bi bi-person"></i> Tài khoản</a></li>
+                                    <li><a class="dropdown-item" href="/Order/History"><i class="bi bi-clock-history"></i> Đơn hàng</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="/Account/Logout"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="/Account/Login" class="btn-auth-login">Đăng nhập</a>
+                                <a href="/Account/Register" class="btn-auth-register">Đăng ký</a>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -139,7 +142,6 @@
             <div class="row g-4">
                 <div class="col-lg-5">
                     <div class="md-footer-brand">
-                        <span class="brand-icon-sm"><i class="bi bi-bag-heart-fill"></i></span>
                         SV22T1020161<span style="color: var(--md-primary);">.</span>Shop
                     </div>
                     <p class="text-muted-md" style="font-size: 0.875rem; max-width: 360px; line-height: 1.7;">
@@ -313,6 +315,8 @@
         function updateBadge(count) {
             var badge = document.getElementById('cart-badge');
             if (!badge) return;
+            count = parseInt(count) || 0;
+            localStorage.setItem('cart_count', count);
             if (count > 0) {
                 badge.textContent = count;
                 badge.style.display = 'flex';
@@ -356,6 +360,10 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            var savedCount = localStorage.getItem('cart_count');
+            if (savedCount !== null) {
+                updateBadge(savedCount);
+            }
             fetch('/Cart/GetCartCount')
                 .then(function(res) { return res.json(); })
                 .then(function(data) { updateBadge(data.count); });

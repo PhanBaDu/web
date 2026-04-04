@@ -8,29 +8,78 @@
     int totalProducts = productResult?.RowCount ?? 0;
 }
 
-<!-- Hero Section -->
-<section class="md-hero">
-    <div class="row align-items-center">
-        <div class="col-lg-6">
-            <h1>
-                Mua sắm thông minh,<br>
-                <span class="highlight">sống hiện đại</span>
-            </h1>
-            <p>Khám phá hàng ngàn sản phẩm chất lượng với giá tốt nhất. Đặt hàng dễ dàng, giao hàng nhanh chóng.</p>
-            <span class="md-hero-badge">
-                <i class="bi bi-truck"></i>
-                Miễn phí vận chuyển cho đơn từ 500K
-            </span>
-        </div>
-        <div class="col-lg-6 text-center d-none d-lg-block">
-            <div style="position:relative;">
-                <div style="font-size:9rem;opacity:0.15;color:white;">
-                    <i class="bi bi-bag-heart-fill"></i>
+<!-- Hero Section (Carousel) -->
+<div id="heroCarousel" class="carousel slide md-hero-carousel" data-bs-ride="carousel" data-bs-interval="3000">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    </div>
+    <div class="carousel-inner">
+        <!-- Slide 1 -->
+        <div class="carousel-item active">
+            <section class="md-hero md-hero-1">
+                <div class="row align-items-center w-100">
+                    <div class="col-lg-6">
+                        <h1>
+                            Mua sắm thông minh,<br>
+                            <span class="highlight">sống hiện đại</span>
+                        </h1>
+                        <p>Khám phá hàng ngàn sản phẩm chất lượng với giá tốt nhất. Đặt hàng dễ dàng, giao hàng nhanh chóng.</p>
+                        <span class="md-hero-badge">
+                            <i class="bi bi-truck"></i>
+                            Miễn phí vận chuyển cho đơn từ 500K
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </section>
+        </div>
+        <!-- Slide 2 -->
+        <div class="carousel-item">
+            <section class="md-hero md-hero-2">
+                <div class="row align-items-center w-100">
+                    <div class="col-lg-6">
+                        <h1>
+                            Siêu ưu đãi hàng tuần,<br>
+                            <span class="highlight">lên đến 50%</span>
+                        </h1>
+                        <p>Đừng bỏ lỡ cơ hội sở hữu những món đồ yêu thích với mức giá không thể rẻ hơn. Deal sốc mỗi ngày.</p>
+                        <span class="md-hero-badge" style="background-color: var(--md-error);">
+                            <i class="bi bi-lightning-fill"></i>
+                            Flash Sale đang diễn ra
+                        </span>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <!-- Slide 3 -->
+        <div class="carousel-item">
+            <section class="md-hero md-hero-3">
+                <div class="row align-items-center w-100">
+                    <div class="col-lg-6">
+                        <h1>
+                            Bộ sưu tập mới,<br>
+                            <span class="highlight">phong cách trẻ trung</span>
+                        </h1>
+                        <p>Cập nhật những xu hướng mới nhất từ thế giới công nghệ và thời trang. Nâng tầm phong cách của bạn.</p>
+                        <span class="md-hero-badge" style="background: rgba(255,255,255,0.25);">
+                            <i class="bi bi-star-fill"></i>
+                            Mới nhất trong tuần
+                        </span>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
-</section>
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
 
 <!-- Main Content -->
 <div class="row">
@@ -41,11 +90,6 @@
                 <span class="md-filter-title-left">
                     <i class="bi bi-sliders" style="color: var(--md-primary);"></i>
                     Bộ lọc tìm kiếm
-                </span>
-                <span class="md-filter-title-meta">
-                    <i class="bi bi-grid-3x3-gap" style="color: var(--md-primary);"></i>
-                    <strong id="productCountDisplay">@totalProducts.ToString("N0", new System.Globalization.CultureInfo("vi-VN"))</strong> sản phẩm
-                    <span style="color: var(--md-primary); font-weight: 700;">12 / trang</span>
                 </span>
             </div>
 
@@ -114,7 +158,7 @@
                     <button type="button" onclick="doSearch(1)" class="md-btn md-btn-primary w-100">
                         <i class="bi bi-funnel"></i> Áp dụng bộ lọc
                     </button>
-                    <button type="button" onclick="resetFilter()" class="md-btn md-btn-text w-100">
+                    <button type="button" onclick="resetFilter()" class="md-btn md-btn-outlined w-100">
                         Xóa tất cả bộ lọc
                     </button>
                 </div>
@@ -124,6 +168,37 @@
 
     <!-- Product List -->
     <div class="col-lg-9">
+        <!-- Dynamic Search Status -->
+        <div class="md-search-status mb-4">
+            @{
+                string categoryPart = "";
+                if (currentCategoryID > 0)
+                {
+                    var cat = categories?.DataItems?.FirstOrDefault(c => c.CategoryID == currentCategoryID);
+                    categoryPart = cat != null ? $"trong danh mục \"{cat.CategoryName}\"" : "";
+                }
+
+                string searchPart = !string.IsNullOrEmpty(currentSearchValue) ? $"từ khóa \"{currentSearchValue}\"" : "";
+                
+                string combined = "";
+                if (!string.IsNullOrEmpty(searchPart) && !string.IsNullOrEmpty(categoryPart)) combined = $"{searchPart} {categoryPart}";
+                else if (!string.IsNullOrEmpty(searchPart)) combined = searchPart;
+                else if (!string.IsNullOrEmpty(categoryPart)) combined = categoryPart;
+
+                string finalMsg = string.IsNullOrEmpty(combined) ? "Tất cả sản phẩm" : $"Kết quả {combined}";
+            }
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="md-search-info">
+                    <span class="text-muted-md">@finalMsg</span>
+                    <span class="mx-2 text-muted-md opacity-25">|</span>
+                    <span class="md-search-count">Tìm thấy <strong>@totalProducts.ToString("N0", new System.Globalization.CultureInfo("vi-VN"))</strong> sản phẩm</span>
+                </div>
+                <div class="md-search-sort">
+                    <span class="text-muted-md" style="font-size: 0.8125rem;">Hiển thị <strong>@productResult?.DataItems?.Count()</strong> / trang</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Results -->
         <div id="searchResult">
             @await Html.PartialAsync("_ProductGrid", productResult ?? new PagedResult<Product>())
