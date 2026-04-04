@@ -29,5 +29,17 @@ namespace SV22T1020161.DataLayers.SqlServer
             connection.Open();
             return connection;
         }
+
+        /// <summary>
+        /// Tạo SqlCommand với CommandTimeout 120 giây (mặc định Dapper là 30s, tăng lên tránh timeout khi server chậm)
+        /// </summary>
+        protected Microsoft.Data.SqlClient.SqlCommand CreateCommand(string sql, Microsoft.Data.SqlClient.SqlConnection connection)
+        {
+            var command = new Microsoft.Data.SqlClient.SqlCommand(sql, connection)
+            {
+                CommandTimeout = 120
+            };
+            return command;
+        }
     }
 }

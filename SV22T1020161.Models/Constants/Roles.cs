@@ -20,6 +20,9 @@ public static class Roles
     /// <summary>Nhân viên kho - quản lý hàng hóa</summary>
     public const string Inventory = "Inventory";
 
+    /// <summary>Nhân viên giao hàng - cập nhật trạng thái giao đơn</summary>
+    public const string Shipper = "Shipper";
+
     // ========== Tập hợp Permissions theo Role ==========
 
     /// <summary>
@@ -73,6 +76,14 @@ public static class Roles
                 Permissions.CategoryView, Permissions.CategoryCreate, Permissions.CategoryEdit, Permissions.CategoryDelete,
                 Permissions.ProductView, Permissions.ProductCreate, Permissions.ProductEdit, Permissions.ProductDelete, Permissions.ProductManagePhoto, Permissions.ProductManageAttribute,
                 Permissions.OrderView, Permissions.OrderDetail,
+            }
+        },
+        {
+            Shipper, new[]
+            {
+                // Không có DashboardView: shipper không vào trang chủ /, chỉ xử lý đơn giao hàng
+                Permissions.OrderView, Permissions.OrderDetail,
+                Permissions.OrderShip, Permissions.OrderComplete,
             }
         },
     };

@@ -20,7 +20,7 @@ public class AccountController : Controller
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Home");
+            return RedirectToDefaultLanding();
 
         ViewBag.ReturnUrl = returnUrl;
         return View();
@@ -128,7 +128,31 @@ public class AccountController : Controller
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
 
-        return RedirectToAction("Index", "Home");
+        return RedirectAfterLogin(permissions);
+    }
+
+    /// <summary>
+    /// Shipper không có dashboard:view — không đẩy về / (403). Ưu tiên trang đơn hàng nếu có quyền.
+    /// </summary>
+    private IActionResult RedirectAfterLogin(List<string> permissions)
+    {
+        if (permissions.Contains(Permissions.DashboardView))
+            return RedirectToAction("Index", "Home");
+        if (permissions.Contains(Permissions.OrderView))
+            return RedirectToAction("Index", "Order");
+        return RedirectToAction("Profile", "Account");
+    }
+
+    /// <summary>
+    /// Khi đã đăng nhập mà mở lại /Account/Login — điều hướng theo quyền (không ép shipper về /).
+    /// </summary>
+    private IActionResult RedirectToDefaultLanding()
+    {
+        if (User.HasClaim("Permission", Permissions.DashboardView))
+            return RedirectToAction("Index", "Home");
+        if (User.HasClaim("Permission", Permissions.OrderView))
+            return RedirectToAction("Index", "Order");
+        return RedirectToAction("Profile", "Account");
     }
 
     /// <summary>

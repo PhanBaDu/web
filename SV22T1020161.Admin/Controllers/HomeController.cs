@@ -13,7 +13,7 @@ namespace SV22T1020161.Admin.Controllers;
 public class HomeController : Controller
 {
     /// <summary>
-    /// Giao diện trang chủ Dashboard
+    /// Giao diện trang chủ Dashboard (shipper và role không có dashboard:view không được vào)
     /// </summary>
     [AuthorizePermission(Permissions.DashboardView)]
     public async Task<IActionResult> Index()

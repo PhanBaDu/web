@@ -12,9 +12,17 @@
     {
         (Roles.Sales, "Quản lý khách hàng", "Thêm, sửa, xóa và xem danh sách khách hàng; tạo và xử lý đơn hàng"),
         (Roles.Inventory, "Quản lý mặt hàng", "Quản lý thông tin sản phẩm, giá bán, trạng thái"),
+        (Roles.Shipper, "Nhân viên giao hàng", "Xem chi tiết đơn hàng; giao hàng và hoàn tất đơn"),
         (Roles.Manager, "Quản lý đơn hàng & nghiệp vụ", "Tạo, xử lý và theo dõi đơn hàng; quản lý nhà cung cấp, shipper và hàng hóa"),
         (Roles.Admin, "Quản trị hệ thống", "Quản lý người dùng, phân quyền, toàn bộ chức năng hệ thống"),
     };
+
+    var knownRoleKeys = new HashSet<string>(roleRows.Select(r => r.RoleKey), StringComparer.OrdinalIgnoreCase);
+    var extraRoles = currentRoles
+        .Where(r => !string.IsNullOrWhiteSpace(r) && !knownRoleKeys.Contains(r))
+        .GroupBy(r => r, StringComparer.OrdinalIgnoreCase)
+        .Select(g => g.First())
+        .ToList();
 }
 @section PageToolBar {
     <button type="submit" form="formChangeRole" class="btn btn-primary">
@@ -83,6 +91,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @{
+                                        var i = 0;
+                                    }
                                     @foreach (var row in roleRows)
                                     {
                                         <tr>
@@ -98,6 +109,24 @@
                                                 <label class="form-check-label mb-0" for="role_@row.RoleKey">@row.Title</label>
                                             </td>
                                             <td class="text-muted">@row.Description</td>
+                                        </tr>
+                                    }
+                                    @foreach (var raw in extraRoles)
+                                    {
+                                        var eid = $"role_extra_{i++}";
+                                        <tr class="table-warning">
+                                            <td class="text-center">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       name="roles"
+                                                       value="@raw"
+                                                       id="@eid"
+                                                       checked="checked" />
+                                            </td>
+                                            <td class="fw-semibold">
+                                                <label class="form-check-label mb-0" for="@eid">@raw</label>
+                                            </td>
+                                            <td class="text-muted">Quyền lưu trong CSDL nhưng chưa có trong danh sách chuẩn; bỏ chọn rồi lưu để gỡ.</td>
                                         </tr>
                                     }
                                 </tbody>

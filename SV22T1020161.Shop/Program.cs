@@ -1,13 +1,17 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.FileProviders;
 using System.Globalization;
 using SV22T1020161.BusinessLayers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Data Protection: không lưu key vào file → tránh stale cookie khi rename/rebuild project
+// Data Protection: lưu key vào thư mục cố định để TempData / cookie không lỗi "key was not found in the key ring" sau khi restart
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys");
+Directory.CreateDirectory(dataProtectionKeysPath);
 builder.Services.AddDataProtection()
-    .SetApplicationName("SV22T1020161.Shop");
+    .SetApplicationName("SV22T1020161.Shop")
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 
 // Add services to the container.
 builder.Services.AddHttpContextAccessor();
@@ -53,6 +57,27 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+// Ảnh sản phẩm trong DB là đường dẫn tương đối dưới /images/products/...
+// Shop không có bản copy wwwroot/images — dùng chung thư mục với Admin trong cùng solution (logic only, không đổi view).
+var adminProductImagesPath = Path.GetFullPath(Path.Combine(
+    app.Environment.ContentRootPath,
+    "..", "SV22T1020161.Admin", "wwwroot", "images", "products"));
+if (Directory.Exists(adminProductImagesPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(adminProductImagesPath),
+        RequestPath = "/images/products"
+    });
+}
+else
+{
+    app.Logger.LogWarning(
+        "Không tìm thấy thư mục ảnh sản phẩm tại {Path}. Sao chép wwwroot/images/products từ Admin vào Shop hoặc giữ 2 project cạnh nhau.",
+        adminProductImagesPath);
+}
+
 app.UseRouting();
 
 app.UseAuthentication();

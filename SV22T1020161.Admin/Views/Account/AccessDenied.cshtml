@@ -29,10 +29,10 @@
                             Vui lòng liên hệ Quản trị viên nếu bạn cần được cấp quyền.
                         </p>
                         <div class="mt-4">
-                            <a href="~/" class="btn btn-primary me-2">
-                                <i class="bi bi-house-door"></i> Về trang chủ
-                            </a>
-                            <a href="~/Account/Logout" class="btn btn-secondary">
+                            <button type="button" onclick="goBack()" class="btn btn-primary me-2">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </button>
+                            <a href="~/Account/Logout" class="btn btn-outline-secondary">
                                 <i class="bi bi-box-arrow-right"></i> Đăng xuất
                             </a>
                         </div>
@@ -41,5 +41,14 @@
             </div>
         </div>
     </div>
+    <script>
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+    </script>
 </body>
 </html>

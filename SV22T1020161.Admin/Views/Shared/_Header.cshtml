@@ -18,6 +18,7 @@
                 permissions.Add(perm);
         }
     }
+    bool HasPerm(string p) => permissions.Contains(p);
 }
 <nav class="app-header navbar navbar-expand bg-body-secondary">
     <div class="container-fluid">
@@ -27,7 +28,10 @@
                     <i class="bi bi-list"></i>
                 </a>
             </li>
-            <li class="nav-item d-none d-md-block"><a href="~/" class="nav-link">Trang chủ</a></li>
+            @if (HasPerm(Permissions.DashboardView))
+            {
+                <li class="nav-item d-none d-md-block"><a href="~/" class="nav-link">Trang chủ</a></li>
+            }
         </ul>
         <ul class="navbar-nav ms-auto">
             @* Hiển thị vai trò *@

@@ -17,6 +17,7 @@ namespace SV22T1020161.DataLayers.SqlServer
         {
             using (var connection = GetConnection())
             {
+                System.Diagnostics.Debug.WriteLine($"[CustomerAccountRepo] Authorize: userName={userName}, passwordHash={password}");
                 // Password đã được hash MD5 bằng C# (CryptHelper) trước khi gọi đến đây.
                 // So sánh trực tiếp: password (đã hash) = Password (đã hash) trong DB.
                 var sql = @"SELECT CAST(CustomerID AS VARCHAR) AS UserID, Email, CustomerName AS FullName

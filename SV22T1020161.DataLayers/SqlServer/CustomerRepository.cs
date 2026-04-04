@@ -75,7 +75,8 @@ namespace SV22T1020161.DataLayers.SqlServer
             {
                 var sql = @"SELECT * FROM Customers WHERE CustomerID = @CustomerID";
                 var parameters = new { CustomerID = id };
-                var data = await connection.QueryFirstOrDefaultAsync<Customer>(sql, parameters);
+                var cmd = new CommandDefinition(sql, parameters, commandTimeout: 120);
+                var data = await connection.QueryFirstOrDefaultAsync<Customer>(cmd);
                 return data;
             }
         }

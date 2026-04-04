@@ -12,6 +12,16 @@ namespace SV22T1020161.Shop.Controllers
 {
     public class AccountController : Controller
     {
+        /// <summary>
+        /// Endpoint test MD5 hash - xóa sau khi debug xong
+        /// </summary>
+        [HttpGet]
+        public IActionResult TestMD5(string password = "123123")
+        {
+            var hash = SV22T1020161.BusinessLayers.CryptHelper.MD5Hash(password);
+            return Content($"Password: '{password}' => MD5: '{hash}' (expected: '4297f44b13955235245b2497399d7a93')");
+        }
+
         [HttpGet]
         public IActionResult Register(string returnUrl = "")
         {
@@ -121,8 +131,10 @@ namespace SV22T1020161.Shop.Controllers
                 return View();
             }
 
-            // TC-L2: Sai email hoac mat khau — mat khau phai hash MD5 giong luc dang ky (CustomerAccountRepository so sanh voi Password da luu)
-            var account = await SecurityDataService.AuthorizeAsync(email, CryptHelper.MD5Hash(password), UserTypes.Customer);
+            // Shop dùng UserTypes.Customer — SecurityDataService sẽ hash password bên trong (1 lần)
+            var debugHash = SV22T1020161.BusinessLayers.CryptHelper.MD5Hash(password);
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Login: email={email}, password={password}, hash={debugHash}");
+            var account = await SecurityDataService.AuthorizeAsync(email, password, UserTypes.Customer);
             if (account == null)
             {
                 ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
