@@ -9,6 +9,7 @@ using SV22T1020161.Models.Constants;
 using SV22T1020161.Models.Sales;
 using SV22T1020161.Models.Catalog;
 using SV22T1020161.Models.Partner;
+using System.Globalization;
 using System.Text.Json;
 
 namespace SV22T1020161.Admin.Controllers
@@ -58,10 +59,24 @@ namespace SV22T1020161.Admin.Controllers
             if (!ApplicationContext.HasPermission(Permissions.OrderView))
                 return Forbid();
             DateTime? fromDate = null, toDate = null;
-            if (!string.IsNullOrEmpty(dateFrom))
-                fromDate = DateTime.TryParse(dateFrom, out var fd) ? fd : null;
-            if (!string.IsNullOrEmpty(dateTo))
-                toDate = DateTime.TryParse(dateTo, out var td) ? td : null;
+            var vi = CultureInfo.GetCultureInfo("vi-VN");
+            string[] dateFormats = ["dd/MM/yyyy", "d/M/yyyy", "dd/M/yyyy", "d/MM/yyyy", "yyyy-MM-dd"];
+            if (!string.IsNullOrWhiteSpace(dateFrom))
+            {
+                var s = dateFrom.Trim();
+                if (DateTime.TryParseExact(s, dateFormats, vi, DateTimeStyles.None, out var fd))
+                    fromDate = fd.Date;
+                else if (DateTime.TryParse(s, vi, DateTimeStyles.None, out fd))
+                    fromDate = fd.Date;
+            }
+            if (!string.IsNullOrWhiteSpace(dateTo))
+            {
+                var s = dateTo.Trim();
+                if (DateTime.TryParseExact(s, dateFormats, vi, DateTimeStyles.None, out var td))
+                    toDate = td.Date;
+                else if (DateTime.TryParse(s, vi, DateTimeStyles.None, out td))
+                    toDate = td.Date;
+            }
 
             var input = new OrderSearchInput()
             {

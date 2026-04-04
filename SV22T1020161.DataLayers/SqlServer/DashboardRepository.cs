@@ -57,7 +57,7 @@ namespace SV22T1020161.DataLayers.SqlServer
                             FROM Orders o
                             JOIN OrderDetails od ON o.OrderID = od.OrderID
                             WHERE o.Status = @CompletedStatus
-                              AND CAST(o.FinishedTime AS DATE) = CAST(GETDATE() AS DATE)";
+                              AND CAST(COALESCE(o.FinishedTime, o.OrderTime) AS DATE) = CAST(GETDATE() AS DATE)";
                 return await connection.ExecuteScalarAsync<decimal>(sql, new { CompletedStatus = (int)OrderStatusEnum.Completed });
             }
         }
@@ -133,21 +133,48 @@ namespace SV22T1020161.DataLayers.SqlServer
         {
             using (var connection = GetConnection())
             {
+                // Tổng giá trị đơn (trừ hủy / từ chối), gom theo tháng lập đơn — phù hợp CSDL nhiều đơn chưa hoàn tất
                 var sql = @"SELECT
-                                MONTH(o.FinishedTime) AS Month,
-                                YEAR(o.FinishedTime) AS Year,
+                                MONTH(o.OrderTime) AS Month,
+                                YEAR(o.OrderTime) AS Year,
                                 ISNULL(SUM(od.Quantity * od.SalePrice), 0) AS Revenue
                             FROM Orders o
                             JOIN OrderDetails od ON o.OrderID = od.OrderID
-                            WHERE o.Status = @CompletedStatus
-                              AND o.FinishedTime >= DATEADD(MONTH, -@Months, GETDATE())
-                            GROUP BY MONTH(o.FinishedTime), YEAR(o.FinishedTime)
+                            WHERE o.Status NOT IN (@Rejected, @Cancelled)
+                              AND o.OrderTime >= DATEADD(MONTH, -@Months, GETDATE())
+                            GROUP BY MONTH(o.OrderTime), YEAR(o.OrderTime)
                             ORDER BY Year, Month";
 
-                var data = (await connection.QueryAsync<MonthlyRevenue>(sql,
-                    new { CompletedStatus = (int)OrderStatusEnum.Completed, Months = months })).ToList();
-                return data;
+                var sparse = (await connection.QueryAsync<MonthlyRevenue>(sql,
+                    new
+                    {
+                        Rejected = (int)OrderStatusEnum.Rejected,
+                        Cancelled = (int)OrderStatusEnum.Cancelled,
+                        Months = months
+                    })).ToList();
+                return FillMonthlySeries(sparse, months);
             }
+        }
+
+        /// <summary>
+        /// Luôn trả đủ N tháng gần nhất (tháng không có dữ liệu = 0) để biểu đồ có trục thời gian rõ ràng.
+        /// </summary>
+        private static List<MonthlyRevenue> FillMonthlySeries(List<MonthlyRevenue> sparse, int months)
+        {
+            var result = new List<MonthlyRevenue>();
+            var today = DateTime.Today;
+            for (var i = months - 1; i >= 0; i--)
+            {
+                var d = today.AddMonths(-i);
+                var hit = sparse.Find(x => x.Month == d.Month && x.Year == d.Year);
+                result.Add(new MonthlyRevenue
+                {
+                    Month = d.Month,
+                    Year = d.Year,
+                    Revenue = hit?.Revenue ?? 0
+                });
+            }
+            return result;
         }
     }
 }

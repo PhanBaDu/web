@@ -46,7 +46,7 @@ namespace SV22T1020161.DataLayers.Interfaces
         Task<List<ProductSalesRank>> GetTopSellingProductsAsync(int take = 4);
 
         /// <summary>
-        /// Lấy số liệu doanh thu theo tháng (12 tháng gần nhất)
+        /// Tổng giá trị đơn hàng theo tháng lập đơn (loại trừ đơn hủy / từ chối), dùng cho biểu đồ dashboard
         /// </summary>
         Task<List<MonthlyRevenue>> GetMonthlyRevenueAsync(int months = 6);
     }

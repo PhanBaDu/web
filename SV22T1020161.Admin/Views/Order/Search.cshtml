@@ -1,26 +1,7 @@
 @model SV22T1020161.Models.Common.PagedResult<SV22T1020161.Models.Sales.OrderViewInfo>
 @{
     Layout = null;
-    var statusColors = new Dictionary<int, string>
-    {
-        { -2, "bg-danger" },
-        { -1, "bg-secondary" },
-        { 1, "bg-warning text-dark" },
-        { 2, "bg-info" },
-        { 3, "bg-primary" },
-        { 4, "bg-success" }
-    };
-    var statusLabels = new Dictionary<int, string>
-    {
-        { -2, "Từ chối" },
-        { -1, "Đã hủy" },
-        { 1, "Chờ duyệt" },
-        { 2, "Đã duyệt" },
-        { 3, "Đang giao" },
-        { 4, "Hoàn tất" }
-    };
 }
-
 <div class="mb-2 text-muted">
     Danh sách này có <strong>@Model.RowCount</strong> đơn hàng. Trang <strong>@Model.Page/@Model.PageCount</strong>
 </div>
@@ -30,30 +11,48 @@
         <table class="table table-bordered table-hover mb-0 align-middle">
             <thead class="table-secondary">
                 <tr>
-                    <th>Mã đơn</th>
-                    <th>Ngày đặt</th>
+                    <th>Ngày đặt hàng</th>
                     <th>Tên khách hàng</th>
                     <th>Điện thoại</th>
-                    <th>Người xử lý</th>
+                    <th>Ngày duyệt</th>
+                    <th>Nhân viên xử lý</th>
                     <th class="text-end">Tổng tiền</th>
-                    <th class="text-center">Trạng thái</th>
-                    <th style="width:50px"></th>
+                    <th class="text-center" style="width:140px;">Trạng thái</th>
+                    <th class="text-center" style="width:40px"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model.DataItems)
                 {
-                    var badgeClass = statusColors.GetValueOrDefault((int)item.Status, "bg-secondary");
-                    var label = statusLabels.GetValueOrDefault((int)item.Status, "Không xác định");
+                    var statusBadge = (int)item.Status switch
+                    {
+                        -2 => "badge bg-danger",
+                        -1 => "badge bg-secondary",
+                        1 => "badge bg-warning text-dark",
+                        2 => "badge bg-info",
+                        3 => "badge bg-primary",
+                        4 => "badge bg-success",
+                        _ => "badge bg-secondary"
+                    };
+                    var statusLabel = (int)item.Status switch
+                    {
+                        -2 => "Từ chối",
+                        -1 => "Đã hủy",
+                        1 => "Chờ duyệt",
+                        2 => "Đã duyệt",
+                        3 => "Đang giao",
+                        4 => "Hoàn tất",
+                        _ => "Không xác định"
+                    };
                     <tr>
-                        <td class="text-center fw-semibold">@item.OrderID</td>
                         <td>@item.OrderTime.ToString("dd/MM/yyyy HH:mm")</td>
                         <td>@item.CustomerName</td>
-                        <td>@item.CustomerPhone</td>
+                        <td>@(string.IsNullOrEmpty(item.CustomerPhone) ? "—" : item.CustomerPhone)</td>
+                        <td>@(item.AcceptTime.HasValue ? item.AcceptTime.Value.ToString("dd/MM/yyyy HH:mm") : "—")</td>
                         <td>@(string.IsNullOrEmpty(item.EmployeeName) ? "—" : item.EmployeeName)</td>
-                        <td class="text-end fw-bold text-danger">@item.TotalAmount.ToString("N0") ₫</td>
+                        <td class="text-end">@item.TotalAmount.ToString("N0")</td>
                         <td class="text-center">
-                            <span class="badge @badgeClass">@label</span>
+                            <span class="@statusBadge">@statusLabel</span>
                         </td>
                         <td class="text-center text-nowrap">
                             <a href="~/Order/Detail/@item.OrderID" class="btn btn-sm btn-primary" title="Chi tiết">

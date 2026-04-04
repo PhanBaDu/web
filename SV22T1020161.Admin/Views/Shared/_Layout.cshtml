@@ -17,12 +17,15 @@
         <main class="app-main">
             <div class="app-content-header">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <h5 class="mb-0">@ViewBag.Title</h5>
-                        </div>
-                        <div class="col-sm-8">
-                            <div class="input-group d-flex justify-content-end">
+                    <div class="row align-items-center">
+                        @if (!string.IsNullOrWhiteSpace(ViewBag.Title as string))
+                        {
+                            <div class="col-sm-4">
+                                <h5 class="mb-0">@ViewBag.Title</h5>
+                            </div>
+                        }
+                        <div class="@(string.IsNullOrWhiteSpace(ViewBag.Title as string) ? "col-12" : "col-sm-8")">
+                            <div class="d-flex flex-wrap justify-content-end align-items-center gap-1">
                                 @await RenderSectionAsync("PageToolBar", required: false)
                             </div>
                         </div>

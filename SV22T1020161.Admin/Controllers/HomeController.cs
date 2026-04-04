@@ -26,7 +26,6 @@ public class HomeController : Controller
         var pipelineOrders = await DashboardDataService.GetOrdersNeedingProcessingAsync(15);
         var monthlyRevenue = await DashboardDataService.GetMonthlyRevenueAsync(6);
 
-        ViewBag.Title = "Trang chủ";
         ViewBag.TodayRevenue = todayRevenue;
         ViewBag.OrderCount = orderCount;
         ViewBag.CustomerCount = customerCount;

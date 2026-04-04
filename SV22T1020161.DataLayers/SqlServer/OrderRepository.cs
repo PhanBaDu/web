@@ -95,12 +95,13 @@ namespace SV22T1020161.DataLayers.SqlServer
         {
             using (var connection = GetConnection())
             {
-                var sql = @"SELECT COUNT(*) FROM Orders
-                            WHERE (@Status = 0 OR Status = @Status)
-                                AND (@CustomerID IS NULL OR CustomerID = @CustomerID)
-                                AND (@SearchValue = N'' OR DeliveryProvince LIKE @SearchValue OR DeliveryAddress LIKE @SearchValue)
-                                AND (@DateFrom IS NULL OR OrderTime >= @DateFrom)
-                                AND (@DateTo IS NULL OR OrderTime <= @DateTo);
+                var sql = @"SELECT COUNT(*) FROM Orders AS o
+                            LEFT JOIN Customers AS c ON o.CustomerID = c.CustomerID
+                            WHERE (@Status = 0 OR o.Status = @Status)
+                                AND (@CustomerID IS NULL OR o.CustomerID = @CustomerID)
+                                AND (@SearchValue = N'' OR c.CustomerName LIKE @SearchValue OR o.DeliveryProvince LIKE @SearchValue OR o.DeliveryAddress LIKE @SearchValue)
+                                AND (@DateFrom IS NULL OR CAST(o.OrderTime AS DATE) >= CAST(@DateFrom AS DATE))
+                                AND (@DateTo IS NULL OR CAST(o.OrderTime AS DATE) <= CAST(@DateTo AS DATE));
 
                             SELECT o.*, 
                                    c.CustomerName, c.ContactName AS CustomerContactName, c.Phone AS CustomerPhone, c.Email AS CustomerEmail, c.Address AS CustomerAddress,
@@ -113,9 +114,9 @@ namespace SV22T1020161.DataLayers.SqlServer
                             LEFT JOIN Shippers AS s ON o.ShipperID = s.ShipperID
                             WHERE (@Status = 0 OR o.Status = @Status)
                                 AND (@CustomerID IS NULL OR o.CustomerID = @CustomerID)
-                                AND (@SearchValue = N'' OR o.DeliveryProvince LIKE @SearchValue OR o.DeliveryAddress LIKE @SearchValue)
-                                AND (@DateFrom IS NULL OR o.OrderTime >= @DateFrom)
-                                AND (@DateTo IS NULL OR o.OrderTime <= @DateTo)
+                                AND (@SearchValue = N'' OR c.CustomerName LIKE @SearchValue OR o.DeliveryProvince LIKE @SearchValue OR o.DeliveryAddress LIKE @SearchValue)
+                                AND (@DateFrom IS NULL OR CAST(o.OrderTime AS DATE) >= CAST(@DateFrom AS DATE))
+                                AND (@DateTo IS NULL OR CAST(o.OrderTime AS DATE) <= CAST(@DateTo AS DATE))
                             ORDER BY o.OrderTime DESC
                             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;";
 
