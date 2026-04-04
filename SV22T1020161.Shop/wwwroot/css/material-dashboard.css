@@ -137,7 +137,7 @@ a:hover { color: var(--md-on-primary-container); }
 .md-navbar {
   background-color: var(--md-surface);
   color: var(--md-on-surface);
-  box-shadow: var(--md-elevation-2);
+  /* box-shadow removed for cleaner look */
   position: sticky;
   top: 0;
   z-index: 1050;
@@ -165,7 +165,7 @@ a:hover { color: var(--md-on-primary-container); }
   justify-content: center;
   color: white;
   font-size: 1rem;
-  box-shadow: 0 2px 4px rgba(103, 80, 164, 0.3);
+  /* box-shadow removed */
 }
 
 .md-navbar .nav-link {
@@ -304,10 +304,11 @@ a:hover { color: var(--md-on-primary-container); }
 .md-navbar .user-menu .dropdown-menu {
   border: none;
   border-radius: var(--md-radius-md);
-  box-shadow: var(--md-elevation-3);
+  border: 1px solid var(--md-outline-variant);
   background-color: var(--md-surface);
   padding: 8px;
   min-width: 200px;
+  /* box-shadow removed */
 }
 
 .md-navbar .user-menu .dropdown-menu .dropdown-item {
@@ -369,13 +370,13 @@ a:hover { color: var(--md-on-primary-container); }
   color: var(--md-on-primary);
   border: none;
   transition: all 0.15s var(--md-decelerated);
-  box-shadow: 0 2px 4px rgba(103, 80, 164, 0.3);
+  /* box-shadow removed */
 }
 
 .md-navbar .btn-auth-register:hover {
   background-color: var(--md-on-primary-container);
   color: var(--md-primary);
-  box-shadow: var(--md-elevation-2);
+  /* box-shadow removed */
 }
 
 /* ── Material Cards ──────────────────────────────────────── */
@@ -383,15 +384,15 @@ a:hover { color: var(--md-on-primary-container); }
   background-color: var(--md-surface);
   border-radius: var(--md-radius-md);
   border: 1px solid var(--md-outline-variant);
-  box-shadow: var(--md-elevation-1);
   overflow: hidden;
-  transition: box-shadow 0.2s var(--md-standard),
+  /* box-shadow removed */
+  transition: border-color 0.2s var(--md-standard);
               border-color 0.2s var(--md-standard),
               transform 0.2s var(--md-standard);
 }
 
 .md-card:hover {
-  box-shadow: var(--md-elevation-3);
+  border-color: var(--md-outline);
 }
 
 .md-card .md-card-header {
@@ -449,13 +450,13 @@ a:hover { color: var(--md-on-primary-container); }
 .md-btn-primary {
   background-color: var(--md-primary);
   color: var(--md-on-primary);
-  box-shadow: 0 1px 2px rgba(103,80,164,.25), 0 1px 3px 1px rgba(103,80,164,.15);
+  /* box-shadow removed */
 }
 .md-btn-primary:hover {
-  box-shadow: var(--md-elevation-2);
+  /* no shadow on hover */
 }
 .md-btn-primary:active {
-  box-shadow: none;
+  /* no shadow on active */
 }
 
 /* Outlined */
@@ -910,19 +911,16 @@ a:hover { color: var(--md-on-primary-container); }
   background-color: var(--md-surface);
   border-radius: var(--md-radius-md);
   border: 1px solid var(--md-outline-variant);
-  box-shadow: var(--md-elevation-1);
   overflow: hidden;
-  transition: box-shadow 0.25s var(--md-standard),
-              transform 0.25s var(--md-standard),
+  transition: transform 0.25s var(--md-standard),
               border-color 0.25s var(--md-standard);
   display: flex;
   flex-direction: column;
 }
 
 .md-product-card:hover {
-  box-shadow: var(--md-elevation-4);
-  transform: translateY(-4px);
-  border-color: var(--md-primary-light);
+  transform: translateY(-2px);
+  border-color: var(--md-outline);
 }
 
 .md-product-card .product-img-wrap {
@@ -1110,7 +1108,7 @@ a:hover { color: var(--md-on-primary-container); }
 .md-auth-card {
   background-color: var(--md-surface);
   border-radius: var(--md-radius-lg);
-  box-shadow: var(--md-elevation-3);
+  /* box-shadow removed */
   padding: 40px;
   max-width: 460px;
   margin: 0 auto;
@@ -1185,7 +1183,7 @@ a:hover { color: var(--md-on-primary-container); }
   background: var(--md-primary);
   border-color: var(--md-primary);
   color: white;
-  box-shadow: 0 4px 12px rgba(103,80,164,.4);
+  /* box-shadow removed */
   transform: scale(1.1);
 }
 
@@ -1193,7 +1191,8 @@ a:hover { color: var(--md-on-primary-container); }
   background: var(--md-primary-container);
   border-color: var(--md-primary);
   color: var(--md-primary);
-  box-shadow: 0 4px 12px rgba(103,80,164,.3);
+  /* box-shadow removed */
+}
 }
 
 .md-timeline-label {
@@ -1254,16 +1253,13 @@ a:hover { color: var(--md-on-primary-container); }
   background-color: var(--md-surface);
   border: 1px solid var(--md-outline-variant);
   border-radius: var(--md-radius-md);
-  box-shadow: var(--md-elevation-1);
   overflow: hidden;
-  transition: box-shadow 0.2s var(--md-standard),
-              border-color 0.2s var(--md-standard);
+  transition: border-color 0.2s var(--md-standard);
   position: relative;
 }
 
 .md-order-card:hover {
-  box-shadow: var(--md-elevation-3);
-  border-color: var(--md-primary-light);
+  border-color: var(--md-outline);
 }
 
 .md-order-card .status-bar {
@@ -1345,7 +1341,7 @@ a:hover { color: var(--md-on-primary-container); }
 .rounded-md         { border-radius: var(--md-radius-md); }
 .rounded-lg         { border-radius: var(--md-radius-lg); }
 .rounded-full       { border-radius: var(--md-radius-full); }
-.shadow-md         { box-shadow: var(--md-elevation-2); }
+.shadow-md         { /* utility class removed - no shadows */ }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -1468,7 +1464,7 @@ a:hover { color: var(--md-on-primary-container); }
   border: 1px solid var(--md-outline-variant);
   border-radius: var(--md-radius-md);
   overflow: hidden;
-  box-shadow: var(--md-elevation-1);
+  /* box-shadow removed */
 }
 
 .md-profile-nav .nav-header {
@@ -1508,7 +1504,6 @@ a:hover { color: var(--md-on-primary-container); }
   color: white;
   border-radius: var(--md-radius-md);
   padding: 24px;
-  box-shadow: var(--md-elevation-4);
   position: relative;
   overflow: hidden;
 }

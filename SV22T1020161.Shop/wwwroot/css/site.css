@@ -16,7 +16,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--md-elevation-3);
+    /* box-shadow removed */
     z-index: 9999;
     transition: all 0.2s var(--md-standard);
     font-size: 1.125rem;
@@ -26,7 +26,7 @@
     background-color: var(--md-on-primary-container);
     color: var(--md-primary);
     transform: translateY(-3px);
-    box-shadow: var(--md-elevation-4);
+    /* box-shadow removed on hover */
 }
 
 /* ── Bootstrap Pagination Override (Material) ─────────────── */
@@ -47,7 +47,7 @@
     background-color: var(--md-primary);
     color: var(--md-on-primary);
     font-weight: 700;
-    box-shadow: 0 2px 4px rgba(103,80,164,.3);
+    /* box-shadow removed */
 }
 
 .pagination .page-item.disabled .page-link {
@@ -67,12 +67,12 @@
 .card {
     border: 1px solid var(--md-outline-variant);
     border-radius: var(--md-radius-md);
-    box-shadow: var(--md-elevation-1);
-    transition: box-shadow 0.2s var(--md-standard);
+    /* box-shadow removed */
+    transition: border-color 0.2s var(--md-standard);
 }
 
 .card:hover {
-    box-shadow: var(--md-elevation-3);
+    border-color: var(--md-outline);
 }
 
 .card-header {
@@ -266,7 +266,7 @@
     align-items: center;
     justify-content: center;
     color: var(--md-primary);
-    box-shadow: var(--md-elevation-1);
+    /* box-shadow removed */
     flex-shrink: 0;
 }
 
