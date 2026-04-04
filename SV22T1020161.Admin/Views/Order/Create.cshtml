@@ -1,0 +1,262 @@
+@using SV22T1020161.Models.Catalog
+@using SV22T1020161.Models.Partner
+@using SV22T1020161.Models.Sales
+@{
+    var customers = ViewBag.Customers as IEnumerable<Customer> ?? Enumerable.Empty<Customer>();
+    var products = ViewBag.Products as IEnumerable<Product> ?? Enumerable.Empty<Product>();
+    var provinces = ViewBag.Provinces as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+    var cart = ViewBag.Cart as List<OrderDetail> ?? new List<OrderDetail>();
+
+    decimal cartTotal = cart.Sum(c => c.TotalPrice);
+}
+
+<div class="row">
+    <!-- Tìm & chọn mặt hàng -->
+    <div class="col-lg-4">
+        <div class="card card-outline card-primary h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-search"></i> Chọn hàng cần bán</h5>
+            </div>
+            <div class="card-body">
+                <form id="formSearchProduct"
+                      method="get"
+                      action="~/Order/SearchProducts"
+                      data-target="productList"
+                      class="mb-3">
+                    <div class="input-group">
+                        <input class="form-control"
+                               name="searchValue"
+                               id="productSearchInput"
+                               placeholder="Nhập tên mặt hàng..." autofocus />
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="productList" class="overflow-auto" style="max-height: 500px;">
+                    @foreach (var p in products)
+                    {
+                        <form class="border rounded p-2 mb-2 bg-light" onsubmit="return addToCart(event, @p.ProductID)">
+                            <input type="hidden" name="productId" value="@p.ProductID" />
+                            <strong>@p.ProductName</strong>
+                            <div class="row mt-2">
+                                <div class="col-4">
+                                    <img src="~/photos/products/@(string.IsNullOrEmpty(p.Photo) ? "nophoto.png" : p.Photo)"
+                                         class="img-fluid border rounded"
+                                         style="max-height: 80px; object-fit: cover;"
+                                         onerror="this.src='https://placehold.co/100x80?text=No+Image'" />
+                                </div>
+                                <div class="col-8">
+                                    <div class="mb-1">
+                                        <span class="fw-bold text-danger">@p.Price.ToString("N0") ₫</span>
+                                    </div>
+                                    <div class="input-group input-group-sm mb-1">
+                                        <span class="input-group-text">SL</span>
+                                        <input type="number" name="quantity" class="form-control text-center" value="1" min="1" />
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Giỏ hàng & Thông tin khách hàng -->
+    <div class="col-lg-8">
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- Giỏ hàng -->
+        <div class="card card-outline card-success mb-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cart"></i> Danh sách mặt hàng đã chọn</h5>
+            </div>
+            <div class="card-body p-2">
+                @if (cart.Count == 0)
+                {
+                    <p class="text-muted text-center mb-0 py-3">Giỏ hàng trống. Vui lòng chọn mặt hàng.</p>
+                }
+                else
+                {
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-success text-center">
+                            <tr>
+                                <th style="width:50px">#</th>
+                                <th>Tên hàng</th>
+                                <th style="width:80px">ĐVT</th>
+                                <th style="width:100px">SL</th>
+                                <th style="width:150px">Giá</th>
+                                <th style="width:150px">Thành tiền</th>
+                                <th style="width:80px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int i = 1;
+                                foreach (var item in cart)
+                                {
+                                    <tr>
+                                        <td class="text-center">@(i++)</td>
+                                        <td>@item.ProductID</td>
+                                        <td class="text-center">—</td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">@item.SalePrice.ToString("N0") ₫</td>
+                                        <td class="text-end fw-semibold">@item.TotalPrice.ToString("N0") ₫</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeFromCart(@item.ProductID)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-success">
+                                <th colspan="5" class="text-end">Tổng cộng:</th>
+                                <th class="text-end text-danger fw-bold">@cartTotal.ToString("N0") ₫</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+            </div>
+        </div>
+
+        <!-- Thông tin khách hàng & giao hàng -->
+        <div class="card card-outline card-info">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Thông tin khách hàng & nơi giao hàng</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="~/Order/SaveOrder" id="formCreateOrder">
+                    <div class="row mb-3">
+                        <label class="col-md-2 col-form-label">Khách hàng <span class="text-danger">*</span></label>
+                        <div class="col-md-10">
+                            <select name="customerID" class="form-select" required
+                                    oninvalid="this.setCustomValidity('Vui lòng chọn khách hàng')"
+                                    onchange="this.setCustomValidity('')">
+                                <option value="">-- Chọn khách hàng --</option>
+                                @foreach (var c in customers)
+                                {
+                                    <option value="@c.CustomerID">@c.CustomerName (@c.ContactName)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-md-2 col-form-label">Tỉnh/Thành <span class="text-danger">*</span></label>
+                        <div class="col-md-4">
+                            <select name="deliveryProvince" class="form-select" required
+                                    oninvalid="this.setCustomValidity('Vui lòng chọn tỉnh/thành giao hàng')"
+                                    onchange="this.setCustomValidity('')">
+                                <option value="">-- Chọn Tỉnh/Thành giao hàng --</option>
+                                @foreach (var p in provinces)
+                                {
+                                    <option value="@p.Value">@p.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <label class="col-md-2 col-form-label text-end">Địa chỉ giao <span class="text-danger">*</span></label>
+                        <div class="col-md-4">
+                            <textarea name="deliveryAddress" class="form-control" rows="1"
+                                      required placeholder="Số nhà, đường, phường/xã..."
+                                      oninvalid="this.setCustomValidity('Vui lòng nhập địa chỉ giao hàng')"
+                                      oninput="this.setCustomValidity('')"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <a href="~/Order" class="btn btn-secondary me-2">Hủy</a>
+                        <button type="submit" class="btn btn-primary" @(cart.Count == 0 ? "disabled" : "")>
+                            <i class="bi bi-check-circle"></i> Lập đơn hàng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function addToCart(event, productId) {
+            event.preventDefault();
+            var form = event.target;
+            var quantity = form.querySelector('input[name="quantity"]').value || 1;
+
+            fetch('@Url.Action("AddToCart", "Order")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'productId=' + productId
+            }).then(function(response) { return response.json(); })
+              .then(function(data) {
+                  if (data.success) {
+                      location.reload();
+                  } else {
+                      alert(data.message || 'Có lỗi xảy ra');
+                  }
+              });
+            return false;
+        }
+
+        function removeFromCart(productId) {
+            fetch('@Url.Action("RemoveFromCart", "Order")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'productId=' + productId
+            }).then(function(response) { return response.json(); })
+              .then(function(data) {
+                  if (data.success) {
+                      location.reload();
+                  }
+              });
+        }
+
+        document.getElementById('formSearchProduct')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var searchValue = document.getElementById('productSearchInput').value;
+            fetch('@Url.Action("SearchProducts", "Order")?searchValue=' + encodeURIComponent(searchValue))
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    renderProducts(data.dataItems || []);
+                });
+        });
+
+        function renderProducts(products) {
+            var container = document.getElementById('productList');
+            if (!products || products.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Không tìm thấy sản phẩm.</p>';
+                return;
+            }
+            var html = '';
+            products.forEach(function(p) {
+                var photo = p.photo || 'nophoto.png';
+                html += '<form class="border rounded p-2 mb-2 bg-light" onsubmit="return addToCart(event, ' + p.productID + ')">' +
+                    '<input type="hidden" name="productId" value="' + p.productID + '" />' +
+                    '<strong>' + p.productName + '</strong>' +
+                    '<div class="row mt-2">' +
+                    '<div class="col-4"><img src="/photos/products/' + photo + '" class="img-fluid border rounded" style="max-height:80px;object-fit:cover;" onerror="this.src=\'https://placehold.co/100x80?text=No+Image\'" /></div>' +
+                    '<div class="col-8">' +
+                    '<div class="mb-1"><span class="fw-bold text-danger">' + Number(p.price).toLocaleString('vi-VN') + ' ₫</span></div>' +
+                    '<div class="input-group input-group-sm mb-1"><span class="input-group-text">SL</span>' +
+                    '<input type="number" name="quantity" class="form-control text-center" value="1" min="1" /></div>' +
+                    '<button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-cart-plus"></i> Thêm vào giỏ</button>' +
+                    '</div></div></form>';
+            });
+            container.innerHTML = html;
+        }
+    </script>
+}

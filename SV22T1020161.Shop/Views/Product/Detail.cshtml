@@ -1,0 +1,243 @@
+@model SV22T1020161.Models.Catalog.Product
+@{
+    ViewData["Title"] = Model.ProductName;
+    var extraPhotos = ViewBag.Photos as IList<ProductPhoto> ?? new List<ProductPhoto>();
+    var attrs = ViewBag.Attributes as IList<ProductAttribute>;
+
+    string MainUrl()
+    {
+        if (string.IsNullOrEmpty(Model.Photo)) return "https://placehold.co/500x500/e8def8/6750a4?text=No+Photo";
+        if (Model.Photo.StartsWith("http")) return Model.Photo;
+        return Url.Content("~/images/products/" + Model.Photo)!;
+    }
+
+    string ThumbUrl(string photo)
+    {
+        if (string.IsNullOrEmpty(photo)) return "https://placehold.co/80x80/e8def8/6750a4?text=NP";
+        if (photo.StartsWith("http")) return photo;
+        return Url.Content("~/images/products/" + photo)!;
+    }
+}
+
+<!-- Breadcrumb -->
+<ul class="md-breadcrumb mb-6">
+    <li><a href="/">Trang chủ</a></li>
+    <li><a href="/Product">Sản phẩm</a></li>
+    <li>@Model.ProductName</li>
+</ul>
+
+<!-- Main layout: gallery trai + info phai -->
+<div class="row g-4 g-lg-5">
+
+    <!-- ===================== GALLERY (ben trai) ===================== -->
+    <div class="col-lg-5">
+        <!-- Main Image -->
+        <div class="md-card mb-3" style="overflow:hidden;">
+            <div class="product-img-zoom" id="mainImageWrapper"
+                 onmousemove="zoomImage(event)" onmouseleave="resetZoom()">
+                <div style="aspect-ratio:1; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--md-surface-container-low);">
+                    <img id="mainProductImage"
+                         src="@MainUrl()"
+                         alt="@Model.ProductName"
+                         style="width:100%;height:100%;object-fit:contain;transition:transform 0.3s;"
+                         loading="eager" />
+                </div>
+                @if (!Model.IsSelling)
+                {
+                    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+                        <span class="md-badge md-badge-danger">Ngừng bán</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Thumbnail Strip -->
+        @if (extraPhotos.Any(p => !p.IsHidden))
+        {
+            <div class="thumb-strip">
+                <button type="button" class="thumb-btn thumb-active" data-src="@MainUrl()">
+                    <img src="@MainUrl()" alt="" />
+                </button>
+                @foreach (var photo in extraPhotos.Where(p => !p.IsHidden))
+                {
+                    var u = ThumbUrl(photo.Photo);
+                    <button type="button" class="thumb-btn" data-src="@u">
+                        <img src="@u" alt="" />
+                    </button>
+                }
+            </div>
+        }
+
+        <!-- Share -->
+        <div class="d-flex align-items-center gap-3 mt-3 text-muted-md" style="font-size:0.8125rem;">
+            <span class="d-flex align-items-center gap-1"><i class="bi bi-share"></i> Chia sẻ</span>
+            <span style="height:14px;width:1px;background:var(--md-outline-variant);"></span>
+            <span class="d-flex align-items-center gap-1"><i class="bi bi-heart"></i> Lưu</span>
+        </div>
+    </div>
+
+    <!-- ===================== PRODUCT INFO (ben phai) ===================== -->
+    <div class="col-lg-7">
+
+        <!-- Unit + Name -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="md-badge md-badge-neutral">@Model.Unit</span>
+            </div>
+            <h1 style="font-size:1.375rem;font-weight:700;color:var(--md-on-surface);line-height:1.3;">
+                @Model.ProductName
+            </h1>
+        </div>
+
+        <!-- Price -->
+        <div class="md-card mb-4" style="border-color:var(--md-primary-light);background:var(--md-primary-container);">
+            <div class="md-card-body">
+                <div class="d-flex align-items-baseline gap-2">
+                    <span style="font-size:0.75rem;color:var(--md-on-primary-container);opacity:0.7;font-weight:500;">Giá bán</span>
+                </div>
+                <div class="d-flex align-items-baseline gap-1 mt-1">
+                    <span style="font-size:2rem;font-weight:800;color:var(--md-error);letter-spacing:-0.02em;">
+                        @Model.Price.ToString("N0")
+                    </span>
+                    <span style="font-size:1.25rem;font-weight:700;color:var(--md-error);">₫</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mo ta ngan -->
+        @if (!string.IsNullOrWhiteSpace(Model.ProductDescription))
+        {
+            <div class="mb-4">
+                <p style="font-size:0.9375rem;color:var(--md-on-surface-variant);line-height:1.7;white-space:pre-line;">@Model.ProductDescription</p>
+            </div>
+        }
+
+        <!-- So luong + nut Mua / Them gio -->
+        @if (Model.IsSelling == true)
+        {
+            <div class="add-to-cart-section mb-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <span class="text-muted-md" style="font-size:0.875rem;font-weight:500;min-width:80px;">Số lượng</span>
+                    <div class="md-qty-stepper">
+                        <button type="button" onclick="changeDetailQty(-1)"><i class="bi bi-dash"></i></button>
+                        <input type="text" id="detail-qty" value="1" readonly />
+                        <button type="button" onclick="changeDetailQty(1)"><i class="bi bi-plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row gap-3">
+                    <!-- Them vao gio -->
+                    <button type="button"
+                            onclick="addToCart(@Model.ProductID, parseInt($('#detail-qty').val(), 10) || 1)"
+                            class="md-btn md-btn-outlined flex-fill"
+                            style="border-color:var(--md-primary);color:var(--md-primary);">
+                        <i class="bi bi-cart-plus"></i>
+                        Thêm vào giỏ
+                    </button>
+                    <!-- Mua ngay -->
+                    <button type="button"
+                            onclick="document.cookie='quickbuy=@Model.ProductID'; window.location='/Cart/Checkout'"
+                            class="md-btn md-btn-primary flex-fill"
+                            style="box-shadow:0 4px 12px rgba(103,80,164,.35);">
+                        <i class="bi bi-lightning-fill"></i>
+                        Mua ngay
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mb-4">
+                <span class="md-badge md-badge-danger d-inline-flex align-items-center gap-2 px-3 py-2">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Sản phẩm hiện đang ngừng bán
+                </span>
+            </div>
+        }
+
+        <!-- Thong tin chi tiet -->
+        <div class="md-card mb-4">
+            <div class="md-card-header">
+                <div class="md-card-icon" style="background:var(--md-primary-container);color:var(--md-primary);">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+                <h5 style="margin:0;font-weight:600;">Thông tin chi tiết</h5>
+            </div>
+            <div class="md-card-body p-0">
+                @if (attrs != null && attrs.Count > 0)
+                {
+                    <table class="md-table" style="margin:0;">
+                        <tbody>
+                            @foreach (var attr in attrs.OrderBy(a => a.DisplayOrder))
+                            {
+                                <tr>
+                                    <td style="padding:12px 20px;color:var(--md-on-surface-variant);font-weight:500;width:40%;">@attr.AttributeName</td>
+                                    <td style="padding:12px 20px;color:var(--md-on-surface);">@attr.AttributeValue</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="p-5 text-center">
+                        <div class="md-empty-icon mx-auto mb-3" style="width:56px;height:56px;font-size:1.5rem;">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                        <p class="text-muted-md" style="font-size:0.875rem;">Sản phẩm này chưa có thông số kỹ thuật bổ sung.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Mo ta dai -->
+        @if (!string.IsNullOrWhiteSpace(Model.ProductDescription))
+        {
+            <div class="md-card">
+                <div class="md-card-header">
+                    <div class="md-card-icon" style="background:var(--md-secondary-container);color:var(--md-secondary);">
+                        <i class="bi bi-card-text"></i>
+                    </div>
+                    <h5 style="margin:0;font-weight:600;">Mô tả sản phẩm</h5>
+                </div>
+                <div class="md-card-body">
+                    <p style="font-size:0.9375rem;color:var(--md-on-surface);line-height:1.7;white-space:pre-line;">@Model.ProductDescription</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function changeDetailQty(delta) {
+            var input = $('#detail-qty');
+            var qty = parseInt(input.val(), 10) + delta;
+            if (isNaN(qty) || qty < 1) qty = 1;
+            input.val(qty);
+        }
+
+        $(function () {
+            $('.thumb-btn').on('click', function () {
+                var src = $(this).data('src');
+                if (!src) return;
+                $('#mainProductImage').attr('src', src).css('transform', 'scale(1)');
+                $('.thumb-btn').removeClass('thumb-active').addClass('thumb-btn');
+                $(this).addClass('thumb-active');
+            });
+        });
+
+        function zoomImage(event) {
+            var img = $('#mainProductImage');
+            var wrapper = $('#mainImageWrapper');
+            var offsetX = event.nativeEvent.offsetX / wrapper.width();
+            var offsetY = event.nativeEvent.offsetY / wrapper.height();
+            img.css('transform', 'scale(2)');
+            img.css('transform-origin', (offsetX * 100) + '% ' + (offsetY * 100) + '%');
+        }
+
+        function resetZoom() {
+            $('#mainProductImage').css('transform', 'scale(1)');
+        }
+    </script>
+}

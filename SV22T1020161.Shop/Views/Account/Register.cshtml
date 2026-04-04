@@ -1,0 +1,171 @@
+@model SV22T1020161.Models.Partner.Customer
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+    Layout = null;
+    var returnUrl = ViewBag.ReturnUrl ?? Context.Request.Query["returnUrl"].ToString();
+}
+
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SV22T1020161.Shop</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/material-dashboard.css" />
+</head>
+<body style="background-color:var(--md-surface-container-low);min-height:100vh;">
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="md-auth-card" style="max-width:640px;">
+                    <!-- Brand -->
+                    <div class="text-center mb-5">
+                        <a href="/" class="brand-logo justify-content-center">
+                            <span class="logo-icon"><i class="bi bi-bag-heart-fill"></i></span>
+                            SV22T1020161<span style="color:var(--md-primary);">.</span>Shop
+                        </a>
+                        <h1 style="font-size:1.5rem;font-weight:700;margin-bottom:6px;">Tạo tài khoản mới</h1>
+                        <p class="text-muted-md" style="font-size:0.875rem;">Chào mừng bạn đến với SV22T1020161. Vui lòng điền thông tin để đăng ký.</p>
+                    </div>
+
+                    <!-- Validation Summary -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="md-alert md-alert-error mb-4">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size:1.125rem;"></i>
+                            <div>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <p style="margin:0;font-size:0.875rem;font-weight:500;">@error.ErrorMessage</p>
+                                }
+                            </div>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form action="~/Account/Register" method="post" class="d-flex flex-column gap-4">
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                        <!-- Name -->
+                        <div class="md-form-group mb-0">
+                            <label class="md-label">Họ và tên <span style="color:var(--md-error);">*</span></label>
+                            <div class="md-input-wrap">
+                                <i class="bi bi-person input-icon"></i>
+                                <input type="text" name="CustomerName" value="@Model?.CustomerName"
+                                       placeholder="Nhập họ tên đầy đủ" class="md-input" />
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <div class="md-form-group mb-0">
+                                    <label class="md-label">Email <span style="color:var(--md-error);">*</span></label>
+                                    <div class="md-input-wrap">
+                                        <i class="bi bi-envelope input-icon"></i>
+                                        <input type="email" name="Email" value="@Model?.Email"
+                                               placeholder="example@gmail.com" class="md-input" />
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Phone -->
+                            <div class="col-md-6">
+                                <div class="md-form-group mb-0">
+                                    <label class="md-label">Số điện thoại <span style="color:var(--md-error);">*</span></label>
+                                    <div class="md-input-wrap">
+                                        <i class="bi bi-phone input-icon"></i>
+                                        <input type="tel" name="Phone" value="@Model?.Phone"
+                                               placeholder="0xxx xxx xxx" class="md-input" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="md-form-group mb-0">
+                            <label class="md-label">Địa chỉ</label>
+                            <div class="md-input-wrap">
+                                <i class="bi bi-geo-alt input-icon"></i>
+                                <input type="text" name="Address" value="@Model?.Address"
+                                       placeholder="Địa chỉ thường trú" class="md-input" />
+                            </div>
+                        </div>
+
+                        <!-- Province -->
+                        <div class="md-form-group mb-0">
+                            <label class="md-label">Tỉnh / Thành phố</label>
+                            <div class="md-input-wrap">
+                                <i class="bi bi-map input-icon"></i>
+                                <select name="Province" class="md-input" style="padding-left:44px;">
+                                    <option value="">-- Chọn tỉnh/thành --</option>
+                                    @foreach (var province in await SV22T1020161.BusinessLayers.DictionaryDataService.ListProvincesAsync())
+                                    {
+                                        <option value="@province.ProvinceName" selected="@(province.ProvinceName == Model?.Province)">
+                                            @province.ProvinceName
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Password hint -->
+                        <div class="md-alert md-alert-warning" style="border-left-color:#FF9800;">
+                            <div>
+                                <strong style="font-size:0.8125rem;">Yêu cầu mật khẩu:</strong>
+                                <ul class="d-flex flex-wrap gap-3 mt-2 mb-0" style="font-size:0.75rem;list-style:none;padding:0;">
+                                    <li><i class="bi bi-check2" style="color:#4CAF50;"></i> Tối thiểu 6 ký tự</li>
+                                    <li><i class="bi bi-check2" style="color:#4CAF50;"></i> Ít nhất 1 chữ HOA</li>
+                                    <li><i class="bi bi-check2" style="color:#4CAF50;"></i> Ít nhất 1 chữ số</li>
+                                    <li><i class="bi bi-check2" style="color:#4CAF50;"></i> Ít nhất 1 ký tự đặc biệt</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Password -->
+                            <div class="col-md-6">
+                                <div class="md-form-group mb-0">
+                                    <label class="md-label">Mật khẩu <span style="color:var(--md-error);">*</span></label>
+                                    <div class="md-input-wrap">
+                                        <i class="bi bi-lock input-icon"></i>
+                                        <input type="password" name="Password" placeholder="Tối thiểu 6 ký tự" class="md-input" />
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Confirm Password -->
+                            <div class="col-md-6">
+                                <div class="md-form-group mb-0">
+                                    <label class="md-label">Xác nhận mật khẩu <span style="color:var(--md-error);">*</span></label>
+                                    <div class="md-input-wrap">
+                                        <i class="bi bi-shield-check input-icon"></i>
+                                        <input type="password" name="confirmPassword" placeholder="Nhập lại mật khẩu" class="md-input" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="md-btn md-btn-primary" style="padding:12px;font-size:1rem;font-weight:700;box-shadow:0 4px 12px rgba(103,80,164,.35);">
+                            <i class="bi bi-person-plus"></i>
+                            Tạo tài khoản
+                        </button>
+
+                        <div class="text-center">
+                            <p class="text-muted-md mb-0" style="font-size:0.875rem;">
+                                Đã có tài khoản? <a href="~/Account/Login?returnUrl=@returnUrl" style="font-weight:600;">Đăng nhập ngay</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/bootstrap.bundle.min.js"></script>
+</body>
+</html>

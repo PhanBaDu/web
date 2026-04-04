@@ -1,0 +1,154 @@
+@using SV22T1020161.Models.Constants
+@{
+    var employee = ViewBag.Employee as SV22T1020161.Models.HR.Employee;
+    var currentRoles = (employee?.RoleNames ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(r => r.Trim())
+        .ToList();
+}
+@{
+    ViewBag.Title = $"Phân quyền: {employee?.FullName}";
+}
+
+@section PageToolBar {
+    <button type="submit" form="formChangeRole" class="btn btn-primary">
+        <i class="bi bi-shield-check me-1"></i>
+        Lưu phân quyền
+    </button>
+    <a href="~/Employee" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Phân quyền cho nhân viên
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form id="formChangeRole" method="post">
+                    <input type="hidden" name="id" value="@employee?.EmployeeID" />
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-muted mb-3">
+                            <i class="bi bi-person me-1"></i>
+                            Thông tin nhân viên
+                        </legend>
+
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Họ và tên</dt>
+                            <dd class="col-sm-9">@employee?.FullName</dd>
+
+                            <dt class="col-sm-3">Email</dt>
+                            <dd class="col-sm-9">@employee?.Email</dd>
+
+                            <dt class="col-sm-3">Trạng thái</dt>
+                            <dd class="col-sm-9">
+                                @if (employee?.IsWorking == true)
+                                {
+                                    <span class="badge bg-success">Đang làm việc</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Đã nghỉ việc</span>
+                                }
+                            </dd>
+                        </dl>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend class="fs-6 text-muted mb-3">
+                            <i class="bi bi-shield-lock me-1"></i>
+                            Vai trò & quyền hạn
+                        </legend>
+                        <p class="text-muted small mb-3">
+                            Mỗi vai trò có tập hợp quyền được định nghĩa sẵn.
+                            Vui lòng chọn vai trò phù hợp cho nhân viên này.
+                        </p>
+
+                        <div class="row">
+                            @{
+                                var roleDefinitions = new[]
+                                {
+                                    (Roles.Admin, "Quản trị viên", "Toàn quyền trên hệ thống", "danger", "bi bi-shield-check"),
+                                    (Roles.Manager, "Quản lý", "Quản lý toàn bộ dữ liệu nghiệp vụ (trừ nhân sự)", "primary", "bi bi-person-badge"),
+                                    (Roles.Sales, "Nhân viên bán hàng", "Chỉ thao tác trên đơn hàng và khách hàng", "success", "bi bi-cart-check"),
+                                    (Roles.Inventory, "Nhân viên kho", "Quản lý hàng hóa và xem đơn hàng", "warning", "bi bi-box-seam"),
+                                };
+                            }
+
+                            @foreach (var role in roleDefinitions)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 @(currentRoles.Contains(role.Item1) ? $"border-{role.Item4}" : "border-secondary")">
+                                        <div class="card-body p-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       name="roles"
+                                                       value="@role.Item1"
+                                                       id="@role.Item1"
+                                                       @(currentRoles.Contains(role.Item1) ? "checked" : "") />
+                                                <label class="form-check-label fw-medium" for="@role.Item1">
+                                                    <i class="@role.Item5 me-1"></i>
+                                                    @role.Item2
+                                                    @if (role.Item1 == Roles.Admin)
+                                                    {
+                                                        <span class="badge bg-danger ms-1">Admin</span>
+                                                    }
+                                                </label>
+                                            </div>
+                                            <p class="text-muted small mb-0 mt-1 ms-4">@role.Item3</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @* Hiển thị permissions chi tiết *@
+                        <div class="mt-3">
+                            <a class="text-decoration-none small" data-bs-toggle="collapse" href="#permissionsDetail" role="button">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Xem chi tiết quyền của từng vai trò
+                            </a>
+                            <div class="collapse mt-2" id="permissionsDetail">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm small mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Vai trò</th>
+                                                <th>Các quyền được cấp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var role in roleDefinitions)
+                                            {
+                                                var perms = Roles.GetPermissions(role.Item1);
+                                                <tr>
+                                                    <td class="fw-medium">@role.Item2</td>
+                                                    <td class="text-muted">@string.Join(", ", perms)</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger mt-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+                        </div>
+                    }
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

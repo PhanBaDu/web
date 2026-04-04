@@ -1,0 +1,173 @@
+@model PagedResult<OrderViewInfo>
+@{
+    ViewData["Title"] = "Lịch sử mua hàng";
+    int currentStatus = ViewBag.Status ?? 0;
+}
+
+<div class="animate-in">
+    <!-- Page Header -->
+    <div class="page-header mb-5">
+        <div class="page-header-icon">
+            <i class="bi bi-clock-history" style="font-size:1.25rem;"></i>
+        </div>
+        <div>
+            <h1 style="font-size:1.75rem;font-weight:800;">Đơn hàng của tôi</h1>
+            <p class="text-muted-md mb-0" style="font-size:0.875rem;">Theo dõi và quản lý các đơn hàng của bạn</p>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="md-card mb-4">
+        <div class="md-card-body py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+
+                <!-- Status Tabs -->
+                <form action="~/Order/History" method="get" id="filterForm" class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2">
+                    <input type="hidden" name="status" id="statusInput" value="@currentStatus" />
+                    <input type="hidden" name="searchValue" value="@ViewBag.SearchValue" />
+                    <div class="md-status-tabs">
+                        <button type="button" onclick="filterByStatus(0)"
+                                class="md-status-tab @(currentStatus == 0 ? "active" : "")">Tất cả</button>
+                        <button type="button" onclick="filterByStatus(1)"
+                                class="md-status-tab @(currentStatus == 1 ? "active" : "")">Đang chờ</button>
+                        <button type="button" onclick="filterByStatus(3)"
+                                class="md-status-tab @(currentStatus == 3 ? "active" : "")">Đang giao</button>
+                        <button type="button" onclick="filterByStatus(4)"
+                                class="md-status-tab @(currentStatus == 4 ? "active" : "")">Đã giao</button>
+                        <button type="button" onclick="filterByStatus(-1)"
+                                class="md-status-tab @(currentStatus == -1 ? "active active-danger" : "")">Đã hủy</button>
+                    </div>
+                </form>
+
+                <!-- Search -->
+                <form action="~/Order/History" method="get" class="md-search-round" style="min-width:260px;">
+                    <input type="hidden" name="status" value="@currentStatus" />
+                    <i class="bi bi-search" style="color:var(--md-outline);flex-shrink:0;"></i>
+                    <input type="text" name="searchValue" value="@ViewBag.SearchValue"
+                           placeholder="Tìm theo mã đơn...">
+                    <button class="md-btn md-btn-icon" style="background:var(--md-primary);color:white;flex-shrink:0;" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order List -->
+    <div class="d-flex flex-column gap-3">
+        @if (Model.DataItems.Count == 0)
+        {
+            <div class="md-empty-state">
+                <div class="md-empty-icon">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <h3 style="font-size:1.25rem;font-weight:700;">Chưa có đơn hàng nào</h3>
+                <p class="text-muted-md mt-2">Bạn chưa có đơn hàng nào trong mục này.</p>
+                <a href="~/Product" class="md-btn md-btn-primary mt-6">
+                    <i class="bi bi-bag"></i> Tiếp tục mua sắm
+                </a>
+            </div>
+        }
+
+        @foreach (var order in Model.DataItems)
+        {
+            string statusBarColor = order.Status switch
+            {
+                SV22T1020161.Models.Sales.OrderStatusEnum.New      => "#607D8B",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Accepted => "#03A9F4",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Shipping  => "#6750A4",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Completed  => "#4CAF50",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Cancelled => "#B3261E",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Rejected  => "#FF9800",
+                _ => "#9E9E9E"
+            };
+
+            string statusBadgeClass = order.Status switch
+            {
+                SV22T1020161.Models.Sales.OrderStatusEnum.New      => "md-badge-neutral",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Accepted => "md-badge-info",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Shipping  => "md-badge-primary",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Completed => "md-badge-success",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Cancelled => "md-badge-danger",
+                SV22T1020161.Models.Sales.OrderStatusEnum.Rejected  => "md-badge-warning",
+                _ => "md-badge-neutral"
+            };
+
+            <!-- Order Card -->
+            <div class="md-order-card">
+                <div class="status-bar" style="background:@statusBarColor;"></div>
+                <div class="p-4">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
+                        <!-- Left info -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+                                <span class="md-badge @statusBadgeClass">@order.StatusDescription</span>
+                                <span style="font-size:0.8125rem;color:var(--md-on-surface-variant);font-weight:500;">
+                                    Mã đơn #<strong>@order.OrderID</strong>
+                                </span>
+                                <span style="font-size:0.8125rem;color:var(--md-on-surface-variant);">
+                                    &bull; Đặt ngày @order.OrderTime.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            </div>
+                            <div>
+                                <h4 style="font-size:0.9375rem;font-weight:600;margin-bottom:4px;">
+                                    <i class="bi bi-geo-alt" style="color:var(--md-primary);margin-right:6px;"></i>
+                                    Giao đến: @order.DeliveryAddress
+                                </h4>
+                            </div>
+                        </div>
+
+                        <!-- Right actions -->
+                        <div class="d-flex flex-column gap-2" style="min-width:220px;">
+                            <div class="text-end">
+                                <p style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--md-on-surface-variant);margin-bottom:4px;">Tổng thanh toán</p>
+                                <p style="font-size:1.5rem;font-weight:800;color:var(--md-on-surface);letter-spacing:-0.02em;line-height:1;margin:0;">
+                                    @order.TotalAmount.ToString("N0") <span style="font-size:0.75rem;font-weight:400;color:var(--md-on-surface-variant);">đ</span>
+                                </p>
+                            </div>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="~/Order/Status/@order.OrderID"
+                                   class="md-btn @(order.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Shipping ? "md-btn-primary" : "md-btn-outlined")"
+                                   style="font-size:0.8125rem;padding:8px 16px;">
+                                    <i class="bi @(order.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Shipping ? "bi-geo-alt" : "bi-eye")"></i>
+                                    @(order.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Shipping ? "Theo dõi đơn" : "Chi tiết")
+                                </a>
+                                <a href="~/Order/Reorder/@order.OrderID"
+                                   class="md-btn md-btn-text"
+                                   style="font-size:0.8125rem;padding:8px 12px;color:var(--md-primary);"
+                                   title="Mua lại">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.PageCount > 1)
+    {
+        <div class="d-flex justify-content-center mt-5">
+            <ul class="md-pagination">
+                @for (int p = 1; p <= Model.PageCount; p++)
+                {
+                    <li class="page-item @(p == Model.Page ? "active" : "")">
+                        <a href="/Order/History?status=@currentStatus&page=@p&searchValue=@ViewBag.SearchValue"
+                           class="page-link">@p</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function filterByStatus(status) {
+            document.getElementById('statusInput').value = status;
+            document.getElementById('filterForm').submit();
+        }
+    </script>
+}

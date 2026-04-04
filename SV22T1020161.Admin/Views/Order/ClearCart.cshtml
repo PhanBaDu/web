@@ -1,0 +1,40 @@
+@{
+    Layout = null;
+}
+<div class="modal-header text-bg-danger">
+    <strong class="modal-title">
+        <i class="bi bi-cart-x me-2"></i>Xóa toàn bộ giỏ hàng
+    </strong>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <div class="alert alert-danger d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Bạn có chắc chắn muốn xóa tất cả các mặt hàng trong giỏ hàng không?
+    </div>
+    <p class="text-muted mb-0">Hành động này sẽ xóa toàn bộ giỏ hàng hiện tại và không thể hoàn tác.</p>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+    <button type="button" class="btn btn-danger" onclick="clearCart()">
+        <i class="bi bi-trash me-1"></i> Xóa giỏ hàng
+    </button>
+</div>
+
+@section Scripts {
+    <script>
+        function clearCart() {
+            fetch('@Url.Action("RemoveFromCart", "Order")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'productId=0'
+            }).then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                }
+            });
+        }
+    </script>
+}

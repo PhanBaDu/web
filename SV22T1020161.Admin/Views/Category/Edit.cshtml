@@ -1,0 +1,42 @@
+@model SV22T1020161.Models.Catalog.Category
+@{
+    ViewBag.Title = "Cập nhật loại hàng";
+}
+<div class="card card-primary card-outline mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Cập nhật thông tin loại hàng</h3>
+    </div>
+    <form asp-action="Edit" method="post">
+        <div class="card-body">
+            <input type="hidden" name="CategoryID" value="@Model.CategoryID" />
+
+            <div class="mb-3">
+                <label class="form-label">Tên loại hàng: <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="CategoryName"
+                       value="@Model.CategoryName" placeholder="Nhập tên loại hàng"
+                       required maxlength="255" autofocus
+                       oninvalid="this.setCustomValidity('Vui lòng nhập tên loại hàng')"
+                       oninput="this.setCustomValidity('')" />
+                @Html.ValidationMessage("CategoryName", new { @class = "text-danger" })
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mô tả:</label>
+                <textarea class="form-control" name="Description" rows="4"
+                          placeholder="Nhập mô tả cho loại hàng..." maxlength="255">@Model.Description</textarea>
+            </div>
+
+            <div class="text-danger">
+                @Html.ValidationSummary(true)
+            </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Lưu thông tin
+            </button>
+            <a href="~/Category" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Hủy bỏ
+            </a>
+        </div>
+    </form>
+</div>

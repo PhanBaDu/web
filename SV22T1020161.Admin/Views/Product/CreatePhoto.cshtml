@@ -1,0 +1,62 @@
+@model SV22T1020161.Models.Catalog.ProductPhoto
+@{
+    ViewBag.Title = "Thêm ảnh sản phẩm";
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Thêm ảnh cho: <span class="text-primary">@(ViewBag.ProductName ?? "Sản phẩm")</span></h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="CreatePhoto" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="ProductID" value="@ViewBag.ProductID" />
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Chọn ảnh <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" name="PhotoFile" accept="image/*"
+                       required
+                       oninvalid="this.setCustomValidity('Vui lòng chọn file ảnh')"
+                       oninput="this.setCustomValidity('')" />
+                <div class="form-text">Hỗ trợ các định dạng: JPG, PNG, GIF, WEBP. Dung lượng tối đa: 5MB.</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Mô tả ảnh</label>
+                <textarea class="form-control" name="Description" rows="2" placeholder="Nhập mô tả cho ảnh (nếu có)"></textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Thứ tự hiển thị</label>
+                <input type="number" class="form-control" name="DisplayOrder" value="0" min="0">
+                <div class="form-text">Số nhỏ hơn sẽ được ưu tiên hiển thị trước.</div>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="IsHidden" />
+                    <input type="hidden" name="IsHidden" value="false" />
+                    <label class="form-check-label" for="IsHidden">
+                        Ẩn ảnh này
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm ảnh
+                </button>
+                <a asp-action="Edit" asp-route-id="@ViewBag.ProductID" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại sản phẩm
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('IsHidden')?.addEventListener('change', function () {
+        var hiddenInput = document.querySelector('input[name="IsHidden"][type="hidden"]');
+        if (hiddenInput) {
+            hiddenInput.value = this.checked ? 'true' : 'false';
+        }
+    });
+</script>

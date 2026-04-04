@@ -1,0 +1,90 @@
+@model SV22T1020161.Models.Sales.OrderDetailViewInfo
+@{
+    Layout = null;
+}
+<div class="modal-header">
+    <strong class="modal-title">
+        <i class="bi bi-pencil me-2"></i>Cập nhật chi tiết đơn hàng
+    </strong>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <form id="formEditCartItem" method="post" action="~/Order/EditCartItem/@Model.OrderID">
+                    <input type="hidden" name="productId" value="@Model.ProductID" />
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-4 col-form-label fw-semibold">Mặt hàng</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control-plaintext fw-bold" value="@Model.ProductName" readonly />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-4 col-form-label fw-semibold">Số lượng <span class="text-danger">*</span></label>
+                        <div class="col-sm-4">
+                            <input type="number"
+                                   class="form-control text-center"
+                                   name="quantity"
+                                   value="@Model.Quantity"
+                                   min="1" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-4 col-form-label fw-semibold">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                        <div class="col-sm-6">
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control text-end fw-bold text-dark money-input"
+                                       name="salePrice"
+                                       value="@Model.SalePrice.ToString("N0")" />
+                                <span class="input-group-text bg-light">₫</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-8 offset-sm-4">
+                            <div class="alert alert-secondary mb-0 py-2">
+                                <strong>Thành tiền:</strong>
+                                <span class="text-danger fw-bold ms-2" id="itemTotal">
+                                    @((Model.Quantity * Model.SalePrice).ToString("N0")) ₫
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4 text-center">
+                <img src="~/photos/products/@(string.IsNullOrEmpty(Model.Photo) ? "nophoto.png" : Model.Photo)"
+                     class="img-thumbnail"
+                     style="max-height: 180px;"
+                     alt="@Model.ProductName"
+                     onerror="this.src='https://placehold.co/300x200?text=No+Image'" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+    <button type="submit" form="formEditCartItem" class="btn btn-primary">
+        <i class="bi bi-check me-1"></i> Cập nhật
+    </button>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('formEditCartItem')?.addEventListener('submit', function (e) {
+            var priceInput = this.querySelector('input[name="salePrice"]');
+            if (priceInput) {
+                var numericValue = priceInput.value.replace(/[^\d]/g, '');
+                priceInput.value = numericValue;
+            }
+        });
+    </script>
+}

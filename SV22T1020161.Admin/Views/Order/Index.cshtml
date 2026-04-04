@@ -1,0 +1,76 @@
+@using SV22T1020161.Admin
+@using SV22T1020161.Models.Constants
+@model SV22T1020161.Models.Sales.OrderSearchInput
+@{
+    ViewBag.Title = "Quản lý Đơn hàng";
+}
+@section PageToolBar {
+    @if (ApplicationContext.HasPermission(Permissions.OrderCreate))
+    {
+        <a href="~/Order/Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Lập đơn hàng mới
+        </a>
+    }
+}
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="formSearch"
+              method="get"
+              action="~/Order/Search"
+              data-target="searchResult">
+
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label">Trạng thái đơn hàng</label>
+                    <select name="status" class="form-select">
+                        <option value="0">-- Tất cả --</option>
+                        <option value="1" selected="@(Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.New)">Đang chờ duyệt</option>
+                        <option value="2" selected="@(Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Accepted)">Đã duyệt</option>
+                        <option value="3" selected="@(Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Shipping)">Đang giao</option>
+                        <option value="4" selected="@(Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Completed)">Hoàn tất</option>
+                        <option value="-1" selected="@(Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Cancelled)">Bị hủy</option>
+                        <option value="-2" selected="@(Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Rejected)">Bị từ chối</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Tên khách hàng / Địa chỉ giao hàng</label>
+                    <div class="input-group">
+                        <input type="text"
+                               name="searchValue"
+                               class="form-control"
+                               placeholder="Tên khách hàng, địa chỉ giao hàng..."
+                               autofocus
+                               value="@Model.SearchValue" />
+                        <button class="btn btn-info d-flex align-items-center">
+                            <i class="bi bi-search me-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResult">
+</div>
+
+@section Scripts {
+    <script>
+        function doSearch(page) {
+            paginationSearch(null, document.getElementById("formSearch"), page);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            doSearch(@Model.Page);
+
+            const formSearch = document.getElementById("formSearch");
+            if (formSearch) {
+                formSearch.addEventListener("submit", function (e) {
+                    paginationSearch(e, this, 1);
+                });
+            }
+        });
+    </script>
+}

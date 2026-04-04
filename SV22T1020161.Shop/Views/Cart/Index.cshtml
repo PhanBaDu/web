@@ -1,0 +1,214 @@
+@model List<SV22T1020161.Shop.Models.CartItem>
+@{
+    ViewData["Title"] = "Giỏ hàng của bạn";
+    var total = Model.Sum(c => c.TotalPrice);
+}
+
+<div class="animate-in">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-icon">
+            <i class="bi bi-cart3" style="font-size:1.25rem;"></i>
+        </div>
+        <div>
+            <h1 style="font-size:1.75rem;font-weight:800;">Giỏ hàng của bạn</h1>
+            <p class="text-muted-md mb-0" style="font-size:0.875rem;">@Model.Sum(c => c.Quantity) mặt hàng</p>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <!-- Empty State -->
+        <div class="md-empty-state">
+            <div class="md-empty-icon">
+                <i class="bi bi-cart-x"></i>
+            </div>
+            <h3 style="font-size:1.25rem;font-weight:700;">Giỏ hàng đang trống</h3>
+            <p class="text-muted-md mt-2" style="max-width:400px;">Hãy khám phá bộ sưu tập của chúng tôi và chọn cho mình những món đồ ưng ý nhất.</p>
+            <a href="~/Product" class="md-btn md-btn-primary mt-6">
+                <i class="bi bi-bag"></i> Mua sắm ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <!-- Cart Items List -->
+            <div class="col-lg-8">
+                <div class="md-card">
+                    <div style="overflow-x:auto;">
+                        <table class="md-table" style="margin:0;">
+                            <thead>
+                                <tr>
+                                    <th style="padding:14px 20px;">Sản phẩm</th>
+                                    <th class="text-center" style="padding:14px 16px;">Đơn giá</th>
+                                    <th class="text-center" style="padding:14px 16px;">Số lượng</th>
+                                    <th class="text-end" style="padding:14px 20px;">Tổng cộng</th>
+                                    <th style="padding:14px 12px;width:48px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="cart-items">
+                                @foreach (var item in Model)
+                                {
+                                    <tr data-id="@item.ProductID">
+                                        <td style="padding:16px 20px;">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div style="width:72px;height:72px;border-radius:var(--md-radius-md);overflow:hidden;background:var(--md-surface-container-low);flex-shrink:0;">
+                                                    <img src="@(string.IsNullOrEmpty(item.Photo) ? "https://placehold.co/100x100/e8def8/6750a4?text=NP" : (item.Photo.StartsWith("http") ? item.Photo : $"/images/products/{item.Photo}"))"
+                                                         style="width:100%;height:100%;object-fit:cover;" />
+                                                </div>
+                                                <div>
+                                                    <h4 style="font-weight:600;font-size:0.9375rem;margin-bottom:4px;">@item.ProductName</h4>
+                                                    <p class="text-muted-md mb-0" style="font-size:0.8125rem;">Đơn vị: @item.Unit</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" style="padding:16px 16px;font-weight:600;">
+                                            @item.Price.ToString("N0") <span style="font-size:0.75rem;">đ</span>
+                                        </td>
+                                        <td class="text-center" style="padding:16px 16px;">
+                                            <div class="md-qty-stepper" style="margin:0 auto;">
+                                                <button type="button" onclick="updateQty(@item.ProductID, -1)"><i class="bi bi-dash"></i></button>
+                                                <input type="text" id="qty-@item.ProductID" value="@item.Quantity" readonly />
+                                                <button type="button" onclick="updateQty(@item.ProductID, 1)"><i class="bi bi-plus"></i></button>
+                                            </div>
+                                        </td>
+                                        <td class="text-end" style="padding:16px 20px;font-weight:700;color:var(--md-error);" id="subtotal-@item.ProductID">
+                                            @item.TotalPrice.ToString("N0") <span style="font-size:0.75rem;">đ</span>
+                                        </td>
+                                        <td style="padding:16px 12px;">
+                                            <button onclick="removeItem(@item.ProductID)"
+                                                    class="md-btn md-btn-icon"
+                                                    style="background:var(--md-error-container);color:var(--md-error);width:36px;height:36px;">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-4">
+                    <a href="~/Product" class="d-flex align-items-center gap-2 link-primary" style="font-size:0.875rem;font-weight:500;">
+                        <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
+                    </a>
+                    <form id="formClearCart" action="/Cart/Clear" method="post" class="d-inline">
+                        <button type="button" class="md-btn md-btn-text" style="color:var(--md-error);" onclick="clearCartConfirm()">Làm trống giỏ hàng</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary / Order Sidebar -->
+            <div class="col-lg-4">
+                <div class="md-summary-card sticky-top" style="top:90px;">
+                    <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+                        <i class="bi bi-receipt" style="color:var(--md-primary);"></i>
+                        Tổng đơn hàng
+                    </h3>
+
+                    <div class="d-flex flex-column gap-3 mb-4" style="font-size:0.9375rem;">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-md">Tạm tính</span>
+                            <span style="font-weight:600;" id="cart-total-summary">@total.ToString("N0") đ</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-md">Thuế (0%)</span>
+                            <span style="font-weight:600;">0 đ</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-md">Phí giao hàng</span>
+                            <span style="color:var(--md-primary);font-weight:600;">Miễn phí</span>
+                        </div>
+                    </div>
+
+                    <hr class="md-divider">
+
+                    <div class="d-flex justify-content-between align-items-end mb-5">
+                        <span style="font-weight:600;font-size:0.875rem;">Thanh toán:</span>
+                        <div class="text-end">
+                            <span class="cart-total-display" id="cart-total-display">@total.ToString("N0")</span>
+                            <span class="text-muted-md" style="font-size:0.875rem;"> đ</span>
+                        </div>
+                    </div>
+
+                    <a href="~/Cart/Checkout"
+                       class="md-btn md-btn-primary w-100"
+                       style="padding:14px;font-size:1rem;font-weight:700;box-shadow:0 4px 12px rgba(103,80,164,.35);">
+                        <i class="bi bi-credit-card"></i>
+                        Thanh toán (@total.ToString("N0") đ)
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function clearCartConfirm() {
+            showConfirmModal({
+                title: 'Làm trống giỏ hàng',
+                message: 'Bạn có chắc muốn làm trống giỏ hàng?',
+                confirmText: 'Làm trống',
+                cancelText: 'Hủy'
+            }).then(function (ok) {
+                if (ok) document.getElementById('formClearCart').submit();
+            });
+        }
+
+        function updateQty(id, delta) {
+            var input = document.getElementById('qty-' + id);
+            if (!input) return;
+            var qty = parseInt(input.value) + delta;
+            if (qty < 1) return;
+
+            fetch('/Cart/Update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'id=' + id + '&quantity=' + qty
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    input.value = qty;
+                    document.getElementById('subtotal-' + id).innerHTML = data.subtotal + ' <span style="font-size:0.75rem;">đ</span>';
+                    document.getElementById('cart-total-summary').textContent = data.total + ' đ';
+                    document.getElementById('cart-total-display').textContent = data.total;
+                    var btn = document.querySelector('.md-btn.md-btn-primary[href*="Checkout"]');
+                    if (btn) btn.innerHTML = '<i class="bi bi-credit-card"></i> Thanh toán (' + data.total + ' đ)';
+                }
+            });
+        }
+
+        function removeItem(id) {
+            showConfirmModal({
+                title: 'Xóa sản phẩm',
+                message: 'Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?',
+                confirmText: 'Xóa',
+                cancelText: 'Hủy'
+            }).then(function (ok) {
+                if (!ok) return;
+                fetch('/Cart/Remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + id
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var row = document.querySelector('tr[data-id="' + id + '"]');
+                        if (row) row.style.display = 'none';
+                        document.getElementById('cart-total-summary').textContent = data.total + ' đ';
+                        document.getElementById('cart-total-display').textContent = data.total;
+                        var btn = document.querySelector('.md-btn.md-btn-primary[href*="Checkout"]');
+                        if (btn) btn.innerHTML = '<i class="bi bi-credit-card"></i> Thanh toán (' + data.total + ' đ)';
+                        updateBadge(data.itemCount);
+                        if (data.itemCount === 0) location.reload();
+                    }
+                });
+            });
+        }
+    </script>
+}

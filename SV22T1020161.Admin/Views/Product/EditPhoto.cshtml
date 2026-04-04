@@ -1,0 +1,71 @@
+@model SV22T1020161.Models.Catalog.ProductPhoto
+@{
+    ViewBag.Title = "Sửa ảnh sản phẩm";
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Sửa ảnh: <span class="text-primary">@Model.Photo</span></h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">Ảnh hiện tại</label>
+                <div>
+                    <img src="~/photos/products/@Model.Photo" class="img-thumbnail" style="max-height: 200px;"
+                         onerror="this.src='https://placehold.co/300x200?text=No+Image'">
+                </div>
+            </div>
+            <div class="col-md-8">
+                <form asp-action="EditPhoto" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="PhotoID" value="@Model.PhotoID" />
+                    <input type="hidden" name="ProductID" value="@Model.ProductID" />
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Chọn ảnh mới (để thay thế)</label>
+                        <input type="file" class="form-control" name="PhotoFile" accept="image/*">
+                        <div class="form-text">Để trống nếu không muốn thay đổi ảnh.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Mô tả ảnh</label>
+                        <textarea class="form-control" name="Description" rows="2">@Model.Description</textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Thứ tự hiển thị</label>
+                        <input type="number" class="form-control" name="DisplayOrder" value="@Model.DisplayOrder" min="0">
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="IsHidden" value="@(Model.IsHidden ? "true" : "false")"
+                                   id="IsHidden" @(Model.IsHidden ? "checked" : "")>
+                            <input type="hidden" name="IsHidden" value="@(Model.IsHidden ? "true" : "false")" />
+                            <label class="form-check-label" for="IsHidden">
+                                Ẩn ảnh này
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
+                        </button>
+                        <a asp-action="Edit" asp-route-id="@Model.ProductID" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Quay lại sản phẩm
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('IsHidden')?.addEventListener('change', function () {
+        var hiddenInput = document.querySelector('input[name="IsHidden"][type="hidden"]');
+        if (hiddenInput) {
+            hiddenInput.value = this.checked ? 'true' : 'false';
+        }
+    });
+</script>

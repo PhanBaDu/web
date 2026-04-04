@@ -1,0 +1,43 @@
+@model SV22T1020161.Models.Catalog.ProductAttribute
+@{
+    ViewBag.Title = "Sửa thuộc tính";
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Sửa thuộc tính: <span class="text-primary">@Model.AttributeName</span></h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="EditAttribute" method="post">
+            <input type="hidden" name="AttributeID" value="@Model.AttributeID" />
+            <input type="hidden" name="ProductID" value="@Model.ProductID" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tên thuộc tính <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="AttributeName"
+                           value="@Model.AttributeName"
+                           required maxlength="100"
+                           oninvalid="this.setCustomValidity('Vui lòng nhập tên thuộc tính')"
+                           oninput="this.setCustomValidity('')" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Giá trị <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="AttributeValue"
+                           value="@Model.AttributeValue"
+                           required maxlength="255"
+                           oninvalid="this.setCustomValidity('Vui lòng nhập giá trị thuộc tính')"
+                           oninput="this.setCustomValidity('')" />
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
+                </button>
+                <a asp-action="Edit" asp-route-id="@Model.ProductID" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại sản phẩm
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
