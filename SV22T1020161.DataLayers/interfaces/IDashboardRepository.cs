@@ -21,6 +21,11 @@ namespace SV22T1020161.DataLayers.Interfaces
         Task<int> CountPendingOrdersAsync();
 
         /// <summary>
+        /// Đếm tổng số đơn hàng trong hệ thống
+        /// </summary>
+        Task<int> CountOrdersAsync();
+
+        /// <summary>
         /// Tính tổng doanh thu hôm nay
         /// </summary>
         Task<decimal> GetTodayRevenueAsync();
@@ -29,6 +34,16 @@ namespace SV22T1020161.DataLayers.Interfaces
         /// Lấy danh sách đơn hàng mới cần xử lý (phân trang)
         /// </summary>
         Task<List<SV22T1020161.Models.Sales.OrderViewInfo>> GetRecentPendingOrdersAsync(int take = 5);
+
+        /// <summary>
+        /// Đơn hàng cần xử lý (mới / đã duyệt chờ giao) cho bảng dashboard
+        /// </summary>
+        Task<List<SV22T1020161.Models.Sales.OrderViewInfo>> GetOrdersNeedingProcessingAsync(int take = 15);
+
+        /// <summary>
+        /// Top sản phẩm bán chạy (theo số lượng đã bán trên đơn hoàn tất)
+        /// </summary>
+        Task<List<ProductSalesRank>> GetTopSellingProductsAsync(int take = 4);
 
         /// <summary>
         /// Lấy số liệu doanh thu theo tháng (12 tháng gần nhất)
@@ -45,5 +60,14 @@ namespace SV22T1020161.DataLayers.Interfaces
         public int Year { get; set; }
         public decimal Revenue { get; set; }
         public string Label => $"{Month}/{Year}";
+    }
+
+    /// <summary>
+    /// Sản phẩm xếp hạng theo số lượng bán
+    /// </summary>
+    public class ProductSalesRank
+    {
+        public string ProductName { get; set; } = "";
+        public int QuantitySold { get; set; }
     }
 }

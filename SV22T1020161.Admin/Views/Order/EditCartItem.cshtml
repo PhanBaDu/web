@@ -60,11 +60,11 @@
                 </form>
             </div>
             <div class="col-md-4 text-center">
-                <img src="~/photos/products/@(string.IsNullOrEmpty(Model.Photo) ? "nophoto.png" : Model.Photo)"
+                <img src="~/images/products/@(string.IsNullOrEmpty(Model.Photo) ? "nophoto.png" : Model.Photo)"
                      class="img-thumbnail"
                      style="max-height: 180px;"
                      alt="@Model.ProductName"
-                     onerror="this.src='https://placehold.co/300x200?text=No+Image'" />
+                     onerror="this.src='@Url.Content("~/images/products/nophoto.png")'" />
             </div>
         </div>
     </div>

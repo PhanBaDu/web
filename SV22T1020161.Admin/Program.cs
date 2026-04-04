@@ -4,95 +4,104 @@ using System.Globalization;
 using SV22T1020161.Models.Constants;
 using SV22T1020161.Admin.AppCodes;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ── 1. Data Protection keys persist across app restarts ──────────────────
+var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "DataProtectionKeys");
+Directory.CreateDirectory(keysFolder);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+    .SetApplicationName("SV22T1020161.Admin")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(180)); // key sống 6 tháng
+
+// ── 2. HTTP Context & MVC ─────────────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews()
-                .AddMvcOptions(option =>
-                {
-                    option.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
-                });
+    .AddMvcOptions(option =>
+    {
+        option.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    });
 
-// Configure Authentication
+// ── 3. Cookie Authentication ─────────────────────────────────────────────
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(option =>
-                {
-                    option.Cookie.Name = "SV22T1020161.Admin";
-                    option.LoginPath = "/Account/Login";
-                    option.AccessDeniedPath = "/Account/AccessDenied";
-                    option.ExpireTimeSpan = TimeSpan.FromDays(7);
-                    option.SlidingExpiration = true;
-                    option.Cookie.HttpOnly = true;
-                    option.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                });
+    .AddCookie(option =>
+    {
+        option.Cookie.Name = "SV22T1020161.Admin";
+        option.LoginPath = "/Account/Login";
+        option.AccessDeniedPath = "/Account/AccessDenied";
+        option.ExpireTimeSpan = TimeSpan.FromDays(7);      // cookie sống 7 ngày tuyệt đối
+        option.SlidingExpiration = true;                    // reset timer mỗi lần dùng
+        option.Cookie.HttpOnly = true;
+        option.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        // IMPORTANT: đặt same site = lax để refresh tab không bị丢失 cookie
+        option.Cookie.SameSite = SameSiteMode.Lax;
+    });
 
-// Configure Authorization - Đăng ký Permission Handler
+// ── 4. Authorization ───────────────────────────────────────────────────────
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
-// Đăng ký Policy yêu cầu vai trò cụ thể + mỗi Permission
 builder.Services.AddAuthorization(options =>
 {
-    // Policy mặc định: yêu cầu đăng nhập (Authenticated)
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
 
-    // Policy AdminOnly
     options.AddPolicy("AdminOnly", policy =>
         policy.RequireRole(Roles.Admin));
 
-    // Policy ManagerOrAdmin
     options.AddPolicy("ManagerOrAdmin", policy =>
         policy.RequireRole(Roles.Admin, Roles.Manager));
 
-    // Policy cho mỗi Permission
-    foreach (var role in Roles.RolePermissions)
+    foreach (var permission in Roles.GetAllPermissions())
     {
-        foreach (var permission in role.Value)
+        var policyName = "Permission_" + permission.Replace(":", "_");
+        options.AddPolicy(policyName, policy =>
         {
-            var policyName = "Permission_" + permission.Replace(":", "_");
-            options.AddPolicy(policyName, policy =>
-            {
-                policy.AddRequirements(new PermissionRequirement(permission));
-            });
-        }
+            policy.AddRequirements(new PermissionRequirement(permission));
+        });
     }
 });
 
-// Configure Session
+// ── 5. Session ────────────────────────────────────────────────────────────
 builder.Services.AddSession(option =>
 {
-    option.IdleTimeout = TimeSpan.FromHours(2);
+    option.IdleTimeout = TimeSpan.FromHours(2);   // session timeout 2h nếu không dùng
     option.Cookie.HttpOnly = true;
     option.Cookie.IsEssential = true;
+    option.Cookie.Name = "SV22T1020161.Admin.Session";
+    option.Cookie.SameSite = SameSiteMode.Lax;
+    option.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ── 6. Middleware order (CRITICAL) ─────────────────────────────────────────
+// Session phải đứng TRƯỚC Authentication để HttpContext.User được hydrate từ session
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
 app.UseStaticFiles();
 app.UseRouting();
+
+// Session trước Authentication
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSession();
 
-//Configure Routing
+// ── 7. Routing ────────────────────────────────────────────────────────────
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-//Configure default format
+// ── 8. Culture ─────────────────────────────────────────────────────────────
 var cultureInfo = new CultureInfo("vi-VN");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-//Configure Application Context
+// ── 9. Application Context ────────────────────────────────────────────────
 ApplicationContext.Configure
 (
     httpContextAccessor: app.Services.GetRequiredService<IHttpContextAccessor>(),
@@ -100,11 +109,9 @@ ApplicationContext.Configure
     configuration: app.Configuration
 );
 
-//Get Connection String from appsettings.json
 string connectionString = builder.Configuration.GetConnectionString("LiteCommerceDB")
     ?? throw new InvalidOperationException("ConnectionString 'LiteCommerceDB' not found.");
 
-// Initialize Business Layer Configuration
 SV22T1020161.BusinessLayers.Configuration.Initialize(connectionString);
 
 app.Run();

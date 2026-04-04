@@ -200,7 +200,11 @@ namespace SV22T1020161.BusinessLayers
         /// </summary>
         public static async Task<bool> UpdateDetailAsync(OrderDetail data)
         {
-            //TODO: Kiểm tra dữ liệu và trạng thái đơn hàng trước khi cập nhật mặt hàng
+            var order = await orderDB.GetAsync(data.OrderID);
+            if (order == null)
+                return false;
+            if (order.Status != OrderStatusEnum.New && order.Status != OrderStatusEnum.Accepted)
+                return false;
             return await orderDB.UpdateDetailAsync(data);
         }
 
@@ -209,7 +213,11 @@ namespace SV22T1020161.BusinessLayers
         /// </summary>
         public static async Task<bool> DeleteDetailAsync(int orderID, int productID)
         {
-            //TODO: Kiểm tra trạng thái đơn hàng trước khi xóa mặt hàng
+            var order = await orderDB.GetAsync(orderID);
+            if (order == null)
+                return false;
+            if (order.Status != OrderStatusEnum.New && order.Status != OrderStatusEnum.Accepted)
+                return false;
             return await orderDB.DeleteDetailAsync(orderID, productID);
         }
 

@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
 @using SV22T1020161.Models.Catalog
 @using SV22T1020161.Models.Partner
 @using SV22T1020161.Models.Sales
@@ -6,28 +7,34 @@
     var products = ViewBag.Products as IEnumerable<Product> ?? Enumerable.Empty<Product>();
     var provinces = ViewBag.Provinces as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
     var cart = ViewBag.Cart as List<OrderDetail> ?? new List<OrderDetail>();
-
+    var cartLookup = ViewBag.CartProductLookup as Dictionary<int, Product> ?? new Dictionary<int, Product>();
+    var productPage = ViewBag.ProductPage as int? ?? 1;
+    var productPageCount = ViewBag.ProductPageCount as int? ?? 1;
     decimal cartTotal = cart.Sum(c => c.TotalPrice);
 }
 
 <div class="row">
-    <!-- Tìm & chọn mặt hàng -->
+    <!-- Tìm kiếm & chọn mặt hàng -->
     <div class="col-lg-4">
         <div class="card card-outline card-primary h-100">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-search"></i> Chọn hàng cần bán</h5>
+                <h5 class="mb-0">
+                    <i class="bi bi-search"></i>
+                    Lựa chọn hàng cần bán
+                </h5>
             </div>
             <div class="card-body">
                 <form id="formSearchProduct"
                       method="get"
-                      action="~/Order/SearchProducts"
+                      action="@Url.Action("SearchProducts", "Order")"
                       data-target="productList"
                       class="mb-3">
                     <div class="input-group">
                         <input class="form-control"
                                name="searchValue"
                                id="productSearchInput"
-                               placeholder="Nhập tên mặt hàng..." autofocus />
+                               placeholder="Nhập tên mặt hàng cần tìm"
+                               autofocus />
                         <button class="btn btn-primary" type="submit">
                             <i class="bi bi-search"></i>
                         </button>
@@ -37,26 +44,31 @@
                 <div id="productList" class="overflow-auto" style="max-height: 500px;">
                     @foreach (var p in products)
                     {
-                        <form class="border rounded p-2 mb-2 bg-light" onsubmit="return addToCart(event, @p.ProductID)">
-                            <input type="hidden" name="productId" value="@p.ProductID" />
+                        <form class="border rounded p-2 mb-2" onsubmit="return addToCartFromForm(event, this, @p.ProductID, @p.Price.ToString(System.Globalization.CultureInfo.InvariantCulture))">
                             <strong>@p.ProductName</strong>
                             <div class="row mt-2">
                                 <div class="col-4">
-                                    <img src="~/photos/products/@(string.IsNullOrEmpty(p.Photo) ? "nophoto.png" : p.Photo)"
-                                         class="img-fluid border rounded"
-                                         style="max-height: 80px; object-fit: cover;"
-                                         onerror="this.src='https://placehold.co/100x80?text=No+Image'" />
+                                    <img src="~/images/products/@(string.IsNullOrEmpty(p.Photo) ? "nophoto.png" : p.Photo)"
+                                         class="img-fluid border"
+                                         style="max-height:100px;object-fit:cover;"
+                                         onerror="this.src='@Url.Content("~/images/products/demo.png")'" />
                                 </div>
                                 <div class="col-8">
-                                    <div class="mb-1">
-                                        <span class="fw-bold text-danger">@p.Price.ToString("N0") ₫</span>
+                                    <div class="row g-2">
+                                        <div class="col-7">
+                                            <label class="form-label mb-0">Giá</label>
+                                            <input class="form-control form-control-sm money-input"
+                                                   name="salePriceDisplay"
+                                                   value="@p.Price.ToString("0")" />
+                                        </div>
+                                        <div class="col-5">
+                                            <label class="form-label mb-0">SL</label>
+                                            <input type="number" name="quantity" min="1" value="1" class="form-control form-control-sm" />
+                                        </div>
                                     </div>
-                                    <div class="input-group input-group-sm mb-1">
-                                        <span class="input-group-text">SL</span>
-                                        <input type="number" name="quantity" class="form-control text-center" value="1" min="1" />
-                                    </div>
-                                    <button type="submit" class="btn btn-sm btn-primary w-100">
-                                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                    <button type="submit" class="btn btn-sm btn-primary mt-2 w-100">
+                                        <i class="bi bi-cart-plus"></i>
+                                        Thêm vào giỏ
                                     </button>
                                 </div>
                             </div>
@@ -64,10 +76,27 @@
                     }
                 </div>
             </div>
+            <div class="card-footer">
+                <ul class="pagination justify-content-between mb-0">
+                    <li class="page-item @(productPage <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="#" id="productPagePrev" role="button" aria-label="Trang trước">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item align-self-center small text-muted px-2">
+                        <span id="productPageLabel">@productPage / @productPageCount</span>
+                    </li>
+                    <li class="page-item @(productPage >= productPageCount ? "disabled" : "")">
+                        <a class="page-link" href="#" id="productPageNext" role="button" aria-label="Trang sau">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
-    <!-- Giỏ hàng & Thông tin khách hàng -->
+    <!-- Giỏ hàng và thông tin khách hàng -->
     <div class="col-lg-8">
         @if (TempData["ErrorMessage"] != null)
         {
@@ -77,114 +106,198 @@
             </div>
         }
 
-        <!-- Giỏ hàng -->
-        <div class="card card-outline card-success mb-3">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-cart"></i> Danh sách mặt hàng đã chọn</h5>
-            </div>
-            <div class="card-body p-2">
-                @if (cart.Count == 0)
-                {
-                    <p class="text-muted text-center mb-0 py-3">Giỏ hàng trống. Vui lòng chọn mặt hàng.</p>
-                }
-                else
-                {
-                    <table class="table table-bordered table-hover align-middle mb-0">
-                        <thead class="table-success text-center">
-                            <tr>
-                                <th style="width:50px">#</th>
-                                <th>Tên hàng</th>
-                                <th style="width:80px">ĐVT</th>
-                                <th style="width:100px">SL</th>
-                                <th style="width:150px">Giá</th>
-                                <th style="width:150px">Thành tiền</th>
-                                <th style="width:80px"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int i = 1;
-                                foreach (var item in cart)
-                                {
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-outline card-success">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cart"></i>
+                            Danh sách mặt hàng đã chọn
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (cart.Count == 0)
+                        {
+                            <p class="text-muted text-center mb-0 py-3">Giỏ hàng trống. Vui lòng chọn mặt hàng.</p>
+                        }
+                        else
+                        {
+                            <table class="table table-bordered table-hover align-middle">
+                                <thead class="table-success">
                                     <tr>
-                                        <td class="text-center">@(i++)</td>
-                                        <td>@item.ProductID</td>
-                                        <td class="text-center">—</td>
-                                        <td class="text-center">@item.Quantity</td>
-                                        <td class="text-end">@item.SalePrice.ToString("N0") ₫</td>
-                                        <td class="text-end fw-semibold">@item.TotalPrice.ToString("N0") ₫</td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeFromCart(@item.ProductID)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
+                                        <th class="text-center">#</th>
+                                        <th style="width:auto">Tên hàng</th>
+                                        <th class="text-center" style="width:100px">ĐVT</th>
+                                        <th class="text-center" style="width:100px">SL</th>
+                                        <th class="text-end" style="width:150px">Giá</th>
+                                        <th class="text-end" style="width:150px">Thành tiền</th>
+                                        <th style="width:80px"></th>
                                     </tr>
-                                }
-                            }
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-success">
-                                <th colspan="5" class="text-end">Tổng cộng:</th>
-                                <th class="text-end text-danger fw-bold">@cartTotal.ToString("N0") ₫</th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                }
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int idx = 1;
+                                        foreach (var item in cart)
+                                        {
+                                            cartLookup.TryGetValue(item.ProductID, out var prod);
+                                            var name = prod?.ProductName ?? ("#" + item.ProductID.ToString());
+                                            var unit = string.IsNullOrWhiteSpace(prod?.Unit) ? "—" : prod!.Unit;
+                                            <tr>
+                                                <td class="text-center">@(idx++)</td>
+                                                <td>@name</td>
+                                                <td class="text-center">@unit</td>
+                                                <td class="text-center">@item.Quantity</td>
+                                                <td class="text-end">@item.SalePrice.ToString("N0")</td>
+                                                <td class="text-end">@item.TotalPrice.ToString("N0")</td>
+                                                <td class="text-end text-nowrap">
+                                                    @{
+                                                        var cartPhoto = string.IsNullOrWhiteSpace(prod?.Photo) ? "nophoto.png" : prod!.Photo;
+                                                    }
+                                                    <button type="button" class="btn btn-sm btn-primary" title="Sửa"
+                                                            data-product-id="@item.ProductID"
+                                                            data-quantity="@item.Quantity"
+                                                            data-sale-price="@item.SalePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                            data-product-name="@name"
+                                                            data-photo="@cartPhoto"
+                                                            onclick="openEditCartModal(this)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <a class="btn btn-sm btn-danger open-modal" title="Xóa"
+                                                       href="@Url.Action("DeleteCartLineConfirm", "Order", new { productId = item.ProductID })"
+                                                       role="button">
+                                                        <i class="bi bi-dash"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="5" class="text-end">Tổng cộng:</th>
+                                        <th class="text-end">@cartTotal.ToString("N0")</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div class="text-end">
+                                <a class="btn btn-danger mt-2 open-modal"
+                                   href="@Url.Action("ClearCart", "Order")"
+                                   role="button"
+                                   title="Xóa toàn bộ giỏ hàng">
+                                    <i class="bi bi-trash"></i>
+                                    Xóa giỏ hàng
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Thông tin khách hàng & giao hàng -->
-        <div class="card card-outline card-info">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-person"></i> Thông tin khách hàng & nơi giao hàng</h5>
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person"></i>
+                            Thông tin khách hàng & nơi giao hàng
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="~/Order/SaveOrder" id="formCreateOrder">
+                            <div class="row mb-3">
+                                <label class="col-md-2 col-form-label">Khách hàng</label>
+                                <div class="col-md-10">
+                                    <select name="customerID" class="form-select" required
+                                            oninvalid="this.setCustomValidity('Vui lòng chọn khách hàng')"
+                                            onchange="this.setCustomValidity('')">
+                                        <option value="">-- Chọn khách hàng --</option>
+                                        @foreach (var c in customers)
+                                        {
+                                            <option value="@c.CustomerID">@c.CustomerName (@c.ContactName)</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-md-2 col-form-label">Tỉnh/thành</label>
+                                <div class="col-md-10">
+                                    <select name="deliveryProvince" class="form-select" required
+                                            oninvalid="this.setCustomValidity('Vui lòng chọn tỉnh/thành giao hàng')"
+                                            onchange="this.setCustomValidity('')">
+                                        <option value="">-- Chọn Tỉnh/thành giao hàng --</option>
+                                        @foreach (var p in provinces)
+                                        {
+                                            <option value="@p.Value">@p.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-md-2 col-form-label">Địa chỉ</label>
+                                <div class="col-md-10">
+                                    <textarea name="deliveryAddress" class="form-control" rows="3" required
+                                              placeholder="Số nhà, đường, phường/xã..."
+                                              oninvalid="this.setCustomValidity('Vui lòng nhập địa chỉ giao hàng')"
+                                              oninput="this.setCustomValidity('')"></textarea>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary" @(cart.Count == 0 ? "disabled" : "")>
+                                    <i class="bi bi-check-circle"></i>
+                                    Lập đơn hàng
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <form method="post" action="~/Order/SaveOrder" id="formCreateOrder">
-                    <div class="row mb-3">
-                        <label class="col-md-2 col-form-label">Khách hàng <span class="text-danger">*</span></label>
-                        <div class="col-md-10">
-                            <select name="customerID" class="form-select" required
-                                    oninvalid="this.setCustomValidity('Vui lòng chọn khách hàng')"
-                                    onchange="this.setCustomValidity('')">
-                                <option value="">-- Chọn khách hàng --</option>
-                                @foreach (var c in customers)
-                                {
-                                    <option value="@c.CustomerID">@c.CustomerName (@c.ContactName)</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
+        </div>
+    </div>
+</div>
 
-                    <div class="row mb-3">
-                        <label class="col-md-2 col-form-label">Tỉnh/Thành <span class="text-danger">*</span></label>
-                        <div class="col-md-4">
-                            <select name="deliveryProvince" class="form-select" required
-                                    oninvalid="this.setCustomValidity('Vui lòng chọn tỉnh/thành giao hàng')"
-                                    onchange="this.setCustomValidity('')">
-                                <option value="">-- Chọn Tỉnh/Thành giao hàng --</option>
-                                @foreach (var p in provinces)
-                                {
-                                    <option value="@p.Value">@p.Text</option>
-                                }
-                            </select>
+<!-- Modal sửa dòng giỏ — bố cục theo ui/Views/Order/EditCartItem.cshtml -->
+<div class="modal fade" id="editCartLineModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <strong class="modal-title">Cập nhật chi tiết đơn hàng</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editCartProductId" />
+                <div class="container-fluid px-0">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="row mb-3 align-items-center">
+                                <label class="col-sm-4 col-form-label fw-semibold">Mặt hàng</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control-plaintext fw-bold" id="editCartProductName" readonly value="" />
+                                </div>
+                            </div>
+                            <div class="row mb-3 align-items-center">
+                                <label class="col-sm-4 col-form-label fw-semibold">Số lượng</label>
+                                <div class="col-sm-5">
+                                    <input type="number" class="form-control text-end" id="editCartQuantity" min="1" value="1" />
+                                </div>
+                            </div>
+                            <div class="row mb-3 align-items-center">
+                                <label class="col-sm-4 col-form-label fw-semibold">Đơn giá</label>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control text-end" id="editCartSalePrice" autocomplete="off" />
+                                </div>
+                            </div>
                         </div>
-                        <label class="col-md-2 col-form-label text-end">Địa chỉ giao <span class="text-danger">*</span></label>
-                        <div class="col-md-4">
-                            <textarea name="deliveryAddress" class="form-control" rows="1"
-                                      required placeholder="Số nhà, đường, phường/xã..."
-                                      oninvalid="this.setCustomValidity('Vui lòng nhập địa chỉ giao hàng')"
-                                      oninput="this.setCustomValidity('')"></textarea>
+                        <div class="col-md-4 text-end">
+                            <img id="editCartPhoto" src="" alt="" class="img-thumbnail" style="max-height:180px;object-fit:contain;" />
                         </div>
                     </div>
-
-                    <div class="text-end">
-                        <a href="~/Order" class="btn btn-secondary me-2">Hủy</a>
-                        <button type="submit" class="btn btn-primary" @(cart.Count == 0 ? "disabled" : "")>
-                            <i class="bi bi-check-circle"></i> Lập đơn hàng
-                        </button>
-                    </div>
-                </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnSaveEditCart">Cập nhật</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
@@ -192,48 +305,67 @@
 
 @section Scripts {
     <script>
-        function addToCart(event, productId) {
-            event.preventDefault();
-            var form = event.target;
-            var quantity = form.querySelector('input[name="quantity"]').value || 1;
+        var productSearchPage = @productPage;
+        var productSearchPageCount = @productPageCount;
+        var productSearchValue = '';
+        var productImageBase = '@Url.Content("~/images/products/")';
+        var editCartSalePriceAutoNumeric = null;
 
+        function formatVnInteger(n) {
+            var x = Math.round(Number(n));
+            if (isNaN(x)) x = 0;
+            return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function parseMoneyInput(el) {
+            if (!el || !el.value) return 0;
+            var s = el.value.replace(/\./g, '').replace(/,/g, '.');
+            var n = parseFloat(s);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function addToCartFromForm(evt, form, productId, defaultPrice) {
+            evt.preventDefault();
+            var qtyInput = form.querySelector('input[name="quantity"]');
+            var qty = parseInt(qtyInput && qtyInput.value, 10) || 1;
+            var moneyEl = form.querySelector('input[name="salePriceDisplay"]');
+            var price = moneyEl ? parseMoneyInput(moneyEl) : defaultPrice;
+            if (price <= 0) price = defaultPrice;
+
+            var body = 'productId=' + productId + '&quantity=' + qty + '&salePrice=' + encodeURIComponent(price);
             fetch('@Url.Action("AddToCart", "Order")', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'productId=' + productId
-            }).then(function(response) { return response.json(); })
-              .then(function(data) {
-                  if (data.success) {
-                      location.reload();
-                  } else {
-                      alert(data.message || 'Có lỗi xảy ra');
-                  }
-              });
+                body: body
+            }).then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) location.reload();
+                    else alert(data.message || 'Có lỗi xảy ra');
+                });
             return false;
         }
 
-        function removeFromCart(productId) {
-            fetch('@Url.Action("RemoveFromCart", "Order")', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'productId=' + productId
-            }).then(function(response) { return response.json(); })
-              .then(function(data) {
-                  if (data.success) {
-                      location.reload();
-                  }
-              });
+        function loadProductPage(page) {
+            if (page < 1 || page > productSearchPageCount) return;
+            productSearchPage = page;
+            var url = '@Url.Action("SearchProducts", "Order")?searchValue=' + encodeURIComponent(productSearchValue) + '&page=' + page;
+            fetch(url).then(function (r) { return r.json(); })
+                .then(function (data) {
+                    productSearchPageCount = Math.max(1, data.pageCount || 1);
+                    productSearchPage = data.page || 1;
+                    var el = document.getElementById('productPageLabel');
+                    if (el) el.textContent = productSearchPage + ' / ' + productSearchPageCount;
+                    renderProducts(data.dataItems || []);
+                    syncPagerState();
+                });
         }
 
-        document.getElementById('formSearchProduct')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            var searchValue = document.getElementById('productSearchInput').value;
-            fetch('@Url.Action("SearchProducts", "Order")?searchValue=' + encodeURIComponent(searchValue))
-                .then(function(response) { return response.json(); })
-                .then(function(data) {
-                    renderProducts(data.dataItems || []);
-                });
-        });
+        function syncPagerState() {
+            var prev = document.getElementById('productPagePrev');
+            var next = document.getElementById('productPageNext');
+            if (prev) prev.parentElement.classList.toggle('disabled', productSearchPage <= 1);
+            if (next) next.parentElement.classList.toggle('disabled', productSearchPage >= productSearchPageCount);
+        }
 
         function renderProducts(products) {
             var container = document.getElementById('productList');
@@ -242,21 +374,118 @@
                 return;
             }
             var html = '';
-            products.forEach(function(p) {
+            products.forEach(function (p) {
                 var photo = p.photo || 'nophoto.png';
-                html += '<form class="border rounded p-2 mb-2 bg-light" onsubmit="return addToCart(event, ' + p.productID + ')">' +
-                    '<input type="hidden" name="productId" value="' + p.productID + '" />' +
-                    '<strong>' + p.productName + '</strong>' +
+                var price = Number(p.price);
+                html += '<form class="border rounded p-2 mb-2" onsubmit="return addToCartFromForm(event, this, ' + p.productID + ', ' + price + ')">' +
+                    '<strong>' + (p.productName || '') + '</strong>' +
                     '<div class="row mt-2">' +
-                    '<div class="col-4"><img src="/photos/products/' + photo + '" class="img-fluid border rounded" style="max-height:80px;object-fit:cover;" onerror="this.src=\'https://placehold.co/100x80?text=No+Image\'" /></div>' +
+                    '<div class="col-4"><img src="@Url.Content("~/images/products/")' + photo + '" class="img-fluid border" style="max-height:100px;object-fit:cover;" onerror="this.src=\'@Url.Content("~/images/products/nophoto.png")\'" /></div>' +
                     '<div class="col-8">' +
-                    '<div class="mb-1"><span class="fw-bold text-danger">' + Number(p.price).toLocaleString('vi-VN') + ' ₫</span></div>' +
-                    '<div class="input-group input-group-sm mb-1"><span class="input-group-text">SL</span>' +
-                    '<input type="number" name="quantity" class="form-control text-center" value="1" min="1" /></div>' +
-                    '<button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-cart-plus"></i> Thêm vào giỏ</button>' +
+                    '<div class="row g-2">' +
+                    '<div class="col-7"><label class="form-label mb-0">Giá</label>' +
+                    '<input class="form-control form-control-sm money-input" name="salePriceDisplay" value="' + Math.round(price) + '" /></div>' +
+                    '<div class="col-5"><label class="form-label mb-0">SL</label>' +
+                    '<input type="number" name="quantity" min="1" value="1" class="form-control form-control-sm" /></div></div>' +
+                    '<button type="submit" class="btn btn-sm btn-primary mt-2 w-100"><i class="bi bi-cart-plus"></i> Thêm vào giỏ</button>' +
                     '</div></div></form>';
             });
             container.innerHTML = html;
+            document.querySelectorAll('#productList .money-input').forEach(function (element) {
+                if (typeof AutoNumeric !== 'undefined') {
+                    new AutoNumeric(element, {
+                        digitGroupSeparator: '.',
+                        decimalCharacter: ',',
+                        decimalPlaces: 0,
+                        unformatOnSubmit: true
+                    });
+                }
+            });
         }
+
+        document.getElementById('formSearchProduct')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+            productSearchValue = document.getElementById('productSearchInput').value || '';
+            productSearchPage = 1;
+            loadProductPage(1);
+        });
+
+        document.getElementById('productPagePrev')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            loadProductPage(productSearchPage - 1);
+        });
+        document.getElementById('productPageNext')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            loadProductPage(productSearchPage + 1);
+        });
+
+        function openEditCartModal(btn) {
+            var productId = parseInt(btn.getAttribute('data-product-id'), 10);
+            var quantity = parseInt(btn.getAttribute('data-quantity'), 10) || 1;
+            var salePrice = parseFloat(btn.getAttribute('data-sale-price')) || 0;
+            var productName = btn.getAttribute('data-product-name') || '';
+            var photo = btn.getAttribute('data-photo') || 'nophoto.png';
+
+            document.getElementById('editCartProductId').value = productId;
+            document.getElementById('editCartProductName').value = productName;
+            document.getElementById('editCartQuantity').value = quantity;
+
+            var priceEl = document.getElementById('editCartSalePrice');
+            if (typeof AutoNumeric !== 'undefined') {
+                if (editCartSalePriceAutoNumeric) {
+                    editCartSalePriceAutoNumeric.remove();
+                    editCartSalePriceAutoNumeric = null;
+                }
+                editCartSalePriceAutoNumeric = new AutoNumeric(priceEl, {
+                    digitGroupSeparator: '.',
+                    decimalCharacter: ',',
+                    decimalPlaces: 0,
+                    unformatOnSubmit: true
+                });
+                editCartSalePriceAutoNumeric.set(salePrice);
+            } else {
+                priceEl.value = formatVnInteger(salePrice);
+            }
+
+            var img = document.getElementById('editCartPhoto');
+            img.alt = productName;
+            img.onerror = function () { this.onerror = null; this.src = productImageBase + 'nophoto.png'; };
+            img.src = productImageBase + photo;
+
+            var modal = new bootstrap.Modal(document.getElementById('editCartLineModal'));
+            modal.show();
+        }
+
+        document.getElementById('btnSaveEditCart')?.addEventListener('click', function () {
+            var pid = parseInt(document.getElementById('editCartProductId').value, 10);
+            var qty = parseInt(document.getElementById('editCartQuantity').value, 10) || 1;
+            var priceEl = document.getElementById('editCartSalePrice');
+            var price = editCartSalePriceAutoNumeric
+                ? editCartSalePriceAutoNumeric.getNumber()
+                : parseMoneyInput(priceEl);
+            var body = 'productId=' + pid + '&quantity=' + qty + '&salePrice=' + encodeURIComponent(price);
+            fetch('@Url.Action("UpdateCart", "Order")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            }).then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) location.reload();
+                });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            syncPagerState();
+            document.querySelectorAll('#productList .money-input').forEach(function (element) {
+                if (typeof AutoNumeric !== 'undefined') {
+                    new AutoNumeric(element, {
+                        digitGroupSeparator: '.',
+                        decimalCharacter: ',',
+                        decimalPlaces: 0,
+                        unformatOnSubmit: true
+                    });
+                }
+            });
+        });
     </script>
 }

@@ -1,11 +1,13 @@
+@using SV22T1020161.DataLayers.Interfaces
 @using SV22T1020161.Models.Sales
 @{
-    var todayRevenue = ViewBag.TodayRevenue;
-    var pendingOrders = ViewBag.PendingOrders;
-    var customerCount = ViewBag.CustomerCount;
-    var productCount = ViewBag.ProductCount;
-    var recentOrders = ViewBag.RecentOrders as List<OrderViewInfo>;
-    var monthlyRevenue = ViewBag.MonthlyRevenue as List<SV22T1020161.DataLayers.Interfaces.MonthlyRevenue>;
+    var todayRevenue = (decimal)ViewBag.TodayRevenue;
+    var orderCount = (int)ViewBag.OrderCount;
+    var customerCount = (int)ViewBag.CustomerCount;
+    var productCount = (int)ViewBag.ProductCount;
+    var topProducts = ViewBag.TopProducts as List<ProductSalesRank> ?? new List<ProductSalesRank>();
+    var pipelineOrders = ViewBag.PipelineOrders as List<OrderViewInfo> ?? new List<OrderViewInfo>();
+    var monthlyRevenue = ViewBag.MonthlyRevenue as List<MonthlyRevenue>;
 }
 
 <!-- Thống kê nhanh -->
@@ -29,8 +31,8 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h6 class="card-title">Đơn hàng chờ duyệt</h6>
-                        <h3 class="mb-0">@pendingOrders</h3>
+                        <h6 class="card-title">Đơn hàng</h6>
+                        <h3 class="mb-0">@orderCount</h3>
                     </div>
                     <i class="bi bi-receipt fs-1 opacity-50"></i>
                 </div>
@@ -57,7 +59,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h6 class="card-title">Sản phẩm đang bán</h6>
+                        <h6 class="card-title">Sản phẩm</h6>
                         <h3 class="mb-0">@productCount</h3>
                     </div>
                     <i class="bi bi-box-seam fs-1 opacity-50"></i>
@@ -84,28 +86,22 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="card card-primary card-outline">
+        <div class="card card-info card-outline">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="bi bi-clock-history me-1"></i>
-                    Đơn hàng mới cần xử lý
+                    <i class="bi bi-star me-1"></i>
+                    Top sản phẩm bán chạy
                 </h5>
             </div>
             <div class="card-body p-0">
-                @if (recentOrders != null && recentOrders.Any())
+                @if (topProducts.Count > 0)
                 {
                     <ul class="list-group list-group-flush">
-                        @foreach (var order in recentOrders)
+                        @foreach (var item in topProducts)
                         {
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>#@order.OrderID</strong> - @order.CustomerName
-                                    <br />
-                                    <small class="text-muted">@order.OrderTime.ToString("dd/MM/yyyy HH:mm")</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-danger">@order.TotalAmount.ToString("N0") đ</span>
-                                </div>
+                                @item.ProductName
+                                <span class="badge bg-success">@item.QuantitySold</span>
                             </li>
                         }
                     </ul>
@@ -113,27 +109,83 @@
                 else
                 {
                     <div class="p-3 text-center text-muted">
-                        <i class="bi bi-check-circle fs-1"></i>
-                        <p class="mb-0 mt-2">Không có đơn hàng chờ duyệt</p>
+                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                        <p class="mb-0 small">Chưa có dữ liệu bán hàng</p>
                     </div>
                 }
-            </div>
-            <div class="card-footer text-center">
-                <a asp-controller="Order" asp-action="Index" class="text-decoration-none">
-                    Xem tất cả đơn hàng <i class="bi bi-arrow-right"></i>
-                </a>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Đơn hàng cần xử lý -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Đơn hàng cần xử lý
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày</th>
+                            <th class="text-end">Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (pipelineOrders.Count > 0)
+                        {
+                            @foreach (var order in pipelineOrders)
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="~/Order/Detail/@order.OrderID" class="text-decoration-none">#@order.OrderID</a>
+                                    </td>
+                                    <td>@order.CustomerName</td>
+                                    <td>@order.OrderTime.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end">@order.TotalAmount.ToString("N0") đ</td>
+                                    <td>
+                                        @if (order.Status == OrderStatusEnum.New)
+                                        {
+                                            <span class="badge bg-danger">Đang chờ duyệt</span>
+                                        }
+                                        else if (order.Status == OrderStatusEnum.Accepted)
+                                        {
+                                            <span class="badge bg-warning text-dark">Chờ giao hàng</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-check2-circle me-1"></i>
+                                    Không có đơn hàng cần xử lý
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const ctx = document.getElementById('revenueChart');
         const monthlyData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
-            (monthlyRevenue ?? new List<SV22T1020161.DataLayers.Interfaces.MonthlyRevenue>())
+            (monthlyRevenue ?? new List<MonthlyRevenue>())
                 .Select(m => new { label = m.Label, revenue = m.Revenue }).ToList()
         ));
 

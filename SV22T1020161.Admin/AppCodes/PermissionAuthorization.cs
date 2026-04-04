@@ -4,19 +4,20 @@ using SV22T1020161.Models.Constants;
 namespace SV22T1020161.Admin.AppCodes;
 
 /// <summary>
-/// Requirement cho kiểm tra quyền cụ thể
+/// Requirement cho kiểm tra quyền: user cần có ÍT NHẤT MỘT trong danh sách permissions
+/// (OR logic: permission1 OR permission2 OR ...)
 /// </summary>
 public class PermissionRequirement : IAuthorizationRequirement
 {
-    public string Permission { get; }
-    public PermissionRequirement(string permission)
+    public IReadOnlyList<string> Permissions { get; }
+    public PermissionRequirement(params string[] permissions)
     {
-        Permission = permission;
+        Permissions = permissions.ToList().AsReadOnly();
     }
 }
 
 /// <summary>
-/// Handler kiểm tra quyền dựa trên Claims của user
+/// Handler kiểm tra quyền: user cần có ÍT NHẤT MỘT permission trong danh sách
 /// </summary>
 public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 {
@@ -24,50 +25,46 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        var roleClaims = context.User.FindAll(System.Security.Claims.ClaimTypes.Role).ToList();
-
-        if (!roleClaims.Any())
+        // User cần có ÍT NHẤT một trong các permissions yêu cầu
+        foreach (var perm in requirement.Permissions)
         {
-            return Task.CompletedTask;
-        }
-
-        foreach (var roleClaim in roleClaims)
-        {
-            var roleName = roleClaim.Value;
-            var permissions = Roles.GetPermissions(roleName);
-
-            if (permissions.Contains(requirement.Permission))
+            if (context.User.HasClaim("Permission", perm))
             {
                 context.Succeed(requirement);
                 return Task.CompletedTask;
             }
         }
-
         return Task.CompletedTask;
     }
 }
 
 /// <summary>
-/// Attribute cho phép yêu cầu quyền cụ thể trên Action/Controller
+/// Attribute yêu cầu user có ÍT NHẤT MỘT permission trong danh sách.
+/// Dùng cho actions cần kiểm tra quyền theo OR logic (ví dụ: create HOẶC edit).
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
 public class AuthorizePermissionAttribute : AuthorizeAttribute
 {
     public AuthorizePermissionAttribute(params string[] permissions)
     {
-        var combinedPolicy = "Permission_" + string.Join("_", permissions.OrderBy(p => p)).Replace(":", "_");
-        Policy = combinedPolicy;
+        // Tạo policy name duy nhất cho tập permissions này
+        var sortedPerms = permissions.OrderBy(p => p).ToList();
+        var combinedKey = string.Join("_", sortedPerms).Replace(":", "_");
+        Policy = "Permission_" + combinedKey;
     }
 }
 
 /// <summary>
-/// Attribute cho phép yêu cầu quyền với quyền mặc định
+/// Attribute yêu cầu user phải có TẤT CẢ permissions trong danh sách.
+/// Dùng cho actions cần kiểm tra quyền theo AND logic.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
-public class AuthorizeRoleAttribute : AuthorizeAttribute
+public class AuthorizeAllPermissionsAttribute : AuthorizeAttribute
 {
-    public AuthorizeRoleAttribute(params string[] roles)
+    public AuthorizeAllPermissionsAttribute(params string[] permissions)
     {
-        Roles = string.Join(",", roles);
+        var sortedPerms = permissions.OrderBy(p => p).ToList();
+        var combinedKey = string.Join("_", sortedPerms).Replace(":", "_");
+        Policy = "AllPermissions_" + combinedKey;
     }
 }

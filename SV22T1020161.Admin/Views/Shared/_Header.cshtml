@@ -18,51 +18,7 @@
                 permissions.Add(perm);
         }
     }
-    bool HasPerm(string p) => permissions.Contains(p);
 }
-<nav class="app-header navbar navbar-expand bg-body-secondary">
-    <div class="container-fluid">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
-                    <i class="bi bi-list"></i>
-                </a>
-            </li>
-            <li class="nav-item d-none d-md-block"><a href="~/" class="nav-link">Trang chủ</a></li>
-        </ul>
-        <ul class="navbar-nav ms-auto">
-            @* Hiển thị vai trò *@
-            <li class="nav-item d-none d-md-block">
-                <span class="nav-link">
-                    <i class="bi bi-shield-check me-1"></i>
-                    @foreach (var role in roles)
-                    {
-                        <span class="badge bg-@(role == "Admin" ? "danger" : role == "Manager" ? "primary" : role == "Sales" ? "success" : "warning") me-1">@role</span>
-                    }
-                </span>
-            </li>
-            <li class="nav-item dropdown user-menu">
-                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <img src="~/images/employees/nophoto.png" class="user-image rounded-circle shadow" alt="User Image" onerror="this.src='/lib/adminlte/assets/img/user2-160x160.jpg'" />
-                    <span class="d-none d-md-inline">@employeeName</span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                    <li class="user-header text-bg-primary">
-                        <img src="~/images/employees/nophoto.png" class="rounded-circle shadow" alt="User Image" onerror="this.src='/lib/adminlte/assets/img/user2-160x160.jpg'" />
-                        <p>
-                            @employeeName
-                            <small>@employeeEmail</small>
-                        </p>
-                    </li>
-                    <li class="user-footer">
-                        <a href="~/Account/ChangePassword" class="btn btn-default btn-flat">Đổi mật khẩu</a>
-                        <a href="~/Account/Logout" class="btn btn-default btn-flat float-end">Thoát</a>
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    </div>
-</nav>
 <nav class="app-header navbar navbar-expand bg-body-secondary">
     <div class="container-fluid">
         <ul class="navbar-nav">

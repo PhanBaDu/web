@@ -10,12 +10,12 @@ using System.Security.Claims;
 
 namespace SV22T1020161.Admin.Controllers;
 
-[AllowAnonymous]
 public class AccountController : Controller
 {
     /// <summary>
     /// Giao diện đăng nhập
     /// </summary>
+    [AllowAnonymous]
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -29,6 +29,7 @@ public class AccountController : Controller
     /// <summary>
     /// Xử lý đăng nhập
     /// </summary>
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
     {
@@ -45,56 +46,54 @@ public class AccountController : Controller
             return View();
         }
 
+        // Lấy thông tin chi tiết nhân viên
         var employee = await HRDataService.GetEmployeeAsync(
             int.TryParse(userAccount.UserID, out var empId) ? empId : 0
         );
 
         if (employee == null)
         {
-            var allEmps = await HRDataService.ListEmployeesAsync(
-                new SV22T1020161.Models.Common.PaginationSearchInput { Page = 1, PageSize = 1000, SearchValue = "" }
-            );
-            employee = allEmps.DataItems.FirstOrDefault(e =>
-                e.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-
-            if (employee == null)
-            {
-                ModelState.AddModelError("", "Không tìm thấy tài khoản nhân viên.");
-                return View();
-            }
+            ModelState.AddModelError("", "Không tìm thấy thông tin chi tiết nhân viên.");
+            return View();
         }
 
-        // Lấy danh sách Permissions từ RoleNames
-        var permissions = new List<string>();
+        // Lấy danh sách Roles và Permissions dựa trên Roles.cs
         var roles = new List<string>();
+        var permissions = new List<string>();
 
         if (!string.IsNullOrWhiteSpace(employee.RoleNames))
         {
-            roles = employee.RoleNames
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .ToList();
-
-            foreach (var role in roles)
+            var dbRoles = employee.RoleNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var dbRole in dbRoles)
             {
-                var rolePerms = Roles.GetPermissions(role);
-                foreach (var perm in rolePerms)
+                // Tìm Role chuẩn trong Roles.cs (không phân biệt hoa thường)
+                var standardizedRole = Roles.RolePermissions.Keys.FirstOrDefault(k => k.Equals(dbRole, StringComparison.OrdinalIgnoreCase));
+                if (standardizedRole != null)
                 {
-                    if (!permissions.Contains(perm))
-                        permissions.Add(perm);
+                    roles.Add(standardizedRole);
+                    var rolePerms = Roles.GetPermissions(standardizedRole);
+                    foreach (var perm in rolePerms)
+                    {
+                        if (!permissions.Contains(perm))
+                            permissions.Add(perm);
+                    }
                 }
             }
         }
 
-        // Tạo Claims
+        // Tạo Claims chuẩn
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, employee.EmployeeID.ToString()),
             new Claim(ClaimTypes.Email, employee.Email),
             new Claim(ClaimTypes.Name, employee.FullName),
             new Claim("Photo", employee.Photo ?? ""),
+            new Claim("UserId", employee.EmployeeID.ToString()), // Hỗ trợ ApplicationContext.CurrentUser
+            new Claim("UserName", employee.Email),               // Hỗ trợ ApplicationContext.CurrentUser
+            new Claim("DisplayName", employee.FullName),         // Hỗ trợ ApplicationContext.CurrentUser
         };
 
-        // Thêm Role Claims (mỗi role một claim riêng)
+        // Thêm Role Claims
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
@@ -119,10 +118,11 @@ public class AccountController : Controller
             }
         );
 
+        // Lưu session (Tùy chọn, vì ta dùng Claims là chính)
         HttpContext.Session.SetInt32("EmployeeID", employee.EmployeeID);
         HttpContext.Session.SetString("EmployeeEmail", employee.Email);
         HttpContext.Session.SetString("EmployeeName", employee.FullName);
-        HttpContext.Session.SetString("EmployeeRoles", employee.RoleNames);
+        HttpContext.Session.SetString("EmployeeRoles", string.Join(",", roles));
 
         // Chuyển hướng
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -144,6 +144,7 @@ public class AccountController : Controller
     /// <summary>
     /// Giao diện từ chối truy cập
     /// </summary>
+    [AllowAnonymous]
     [HttpGet]
     public IActionResult AccessDenied(string? returnUrl = null)
     {
@@ -235,17 +236,25 @@ public class AccountController : Controller
         // Cập nhật lại authentication cookie
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-        var roles = employee.RoleNames
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
+        // Standardize role names giống như Login action
+        var standardizedRoles = new List<string>();
         var permissions = new List<string>();
-        foreach (var role in roles)
+        if (!string.IsNullOrWhiteSpace(employee.RoleNames))
         {
-            var perms = Roles.GetPermissions(role);
-            foreach (var perm in perms)
+            var dbRoles = employee.RoleNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var dbRole in dbRoles)
             {
-                if (!permissions.Contains(perm))
-                    permissions.Add(perm);
+                var standardizedRole = Roles.RolePermissions.Keys.FirstOrDefault(k => k.Equals(dbRole, StringComparison.OrdinalIgnoreCase));
+                if (standardizedRole != null && !standardizedRoles.Contains(standardizedRole))
+                {
+                    standardizedRoles.Add(standardizedRole);
+                    var rolePerms = Roles.GetPermissions(standardizedRole);
+                    foreach (var perm in rolePerms)
+                    {
+                        if (!permissions.Contains(perm))
+                            permissions.Add(perm);
+                    }
+                }
             }
         }
 
@@ -255,8 +264,11 @@ public class AccountController : Controller
             new Claim(ClaimTypes.Email, employee.Email),
             new Claim(ClaimTypes.Name, employee.FullName),
             new Claim("Photo", employee.Photo ?? ""),
+            new Claim("UserId", employee.EmployeeID.ToString()),
+            new Claim("UserName", employee.Email),
+            new Claim("DisplayName", employee.FullName),
         };
-        foreach (var role in roles)
+        foreach (var role in standardizedRoles)
             newClaims.Add(new Claim(ClaimTypes.Role, role));
         foreach (var perm in permissions)
             newClaims.Add(new Claim("Permission", perm));

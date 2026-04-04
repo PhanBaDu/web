@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
 using SV22T1020161.Admin;
 using SV22T1020161.Admin.AppCodes;
@@ -109,14 +110,62 @@ namespace SV22T1020161.Admin.Controllers
             var customers = await PartnerDataService.ListCustomersAsync(new PaginationSearchInput { Page = 1, PageSize = 500, SearchValue = "" });
             var products = await CatalogDataService.ListProductsAsync(new ProductSearchInput { Page = 1, PageSize = 20, SearchValue = "" });
             var provinces = await DictionaryDataService.ListProvincesAsync();
+            var provinceItems = provinces
+                .Select(p => new SelectListItem { Value = p.ProvinceName, Text = p.ProvinceName })
+                .ToList();
             var cart = GetCart();
+
+            var cartProductLookup = new Dictionary<int, Product>();
+            foreach (var pid in cart.Select(c => c.ProductID).Distinct())
+            {
+                var p = await CatalogDataService.GetProductAsync(pid);
+                if (p != null)
+                    cartProductLookup[pid] = p;
+            }
 
             ViewBag.Customers = customers.DataItems;
             ViewBag.Products = products.DataItems;
-            ViewBag.Provinces = provinces;
+            ViewBag.Provinces = provinceItems;
             ViewBag.Cart = cart;
-            ViewBag.Title = "Lập đơn hàng mới";
+            ViewBag.CartProductLookup = cartProductLookup;
+            ViewBag.ProductPage = products.Page;
+            ViewBag.ProductPageCount = products.PageCount;
+            ViewBag.Title = "Lập đơn hàng";
             return View();
+        }
+
+        /// <summary>
+        /// Modal xác nhận xóa toàn bộ giỏ hàng (lập đơn mới)
+        /// </summary>
+        [HttpGet]
+        public IActionResult ClearCart()
+        {
+            if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
+                return RedirectToAction("AccessDenied", "Account");
+            return View();
+        }
+
+        /// <summary>
+        /// Modal xác nhận xóa một mặt hàng khỏi giỏ (lập đơn mới — session)
+        /// </summary>
+        [HttpGet]
+        public IActionResult DeleteCartLineConfirm(int productId)
+        {
+            if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
+                return RedirectToAction("AccessDenied", "Account");
+            return View(productId);
+        }
+
+        /// <summary>
+        /// Xóa toàn bộ giỏ hàng trong session (lập đơn mới)
+        /// </summary>
+        [HttpPost]
+        public IActionResult ClearEntireCart()
+        {
+            if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện." });
+            SaveCart(new List<OrderDetail>());
+            return Json(new { success = true });
         }
 
         /// <summary>
@@ -135,7 +184,7 @@ namespace SV22T1020161.Admin.Controllers
         /// Thêm sản phẩm vào giỏ hàng (AJAX)
         /// </summary>
         [HttpPost]
-        public IActionResult AddToCart(int productId)
+        public IActionResult AddToCart(int productId, int quantity = 1, decimal? salePrice = null)
         {
             if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
                 return Json(new { success = false, message = "Bạn không có quyền thực hiện." });
@@ -143,12 +192,21 @@ namespace SV22T1020161.Admin.Controllers
             if (product == null)
                 return Json(new { success = false, message = "Sản phẩm không tồn tại." });
 
+            if (quantity < 1)
+                quantity = 1;
+            var price = salePrice ?? product.Price;
+            if (price < 0)
+                price = product.Price;
+
             var cart = GetCart();
             var existing = cart.FirstOrDefault(c => c.ProductID == productId);
             if (existing != null)
-                existing.Quantity++;
+            {
+                existing.Quantity += quantity;
+                existing.SalePrice = price;
+            }
             else
-                cart.Add(new OrderDetail { OrderID = 0, ProductID = product.ProductID, SalePrice = product.Price, Quantity = 1 });
+                cart.Add(new OrderDetail { OrderID = 0, ProductID = product.ProductID, SalePrice = price, Quantity = quantity });
             SaveCart(cart);
             return Json(new { success = true, cartCount = cart.Sum(c => c.Quantity) });
         }
@@ -157,7 +215,7 @@ namespace SV22T1020161.Admin.Controllers
         /// Cập nhật số lượng sản phẩm trong giỏ hàng (AJAX)
         /// </summary>
         [HttpPost]
-        public IActionResult UpdateCart(int productId, int quantity)
+        public IActionResult UpdateCart(int productId, int quantity, decimal? salePrice = null)
         {
             if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
                 return Json(new { success = false, message = "Bạn không có quyền thực hiện." });
@@ -166,7 +224,12 @@ namespace SV22T1020161.Admin.Controllers
             if (item != null)
             {
                 if (quantity <= 0) cart.Remove(item);
-                else item.Quantity = quantity;
+                else
+                {
+                    item.Quantity = quantity;
+                    if (salePrice.HasValue && salePrice.Value >= 0)
+                        item.SalePrice = salePrice.Value;
+                }
                 SaveCart(cart);
             }
             return Json(new { success = true, total = cart.Sum(c => c.TotalPrice) });
@@ -228,14 +291,16 @@ namespace SV22T1020161.Admin.Controllers
         // ===== Cart Management (Modal) =====
 
         /// <summary>
-        /// Giao diện chỉnh sửa mặt hàng trong giỏ hàng
+        /// Giao diện chỉnh sửa mặt hàng trong đơn hàng
         /// </summary>
         public async Task<IActionResult> EditCartItem(int id, int productId)
         {
-            if (!ApplicationContext.HasPermission(Permissions.OrderView))
+            if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
                 return RedirectToAction("AccessDenied", "Account");
             var order = await SalesDataService.GetOrderAsync(id);
             if (order == null) return RedirectToAction("Index");
+            if (order.Status != OrderStatusEnum.New && order.Status != OrderStatusEnum.Accepted)
+                return RedirectToAction("Detail", new { id });
             var detail = await SalesDataService.GetDetailAsync(id, productId);
             if (detail == null) return RedirectToAction("Detail", new { id });
             ViewBag.Order = order;
@@ -244,13 +309,20 @@ namespace SV22T1020161.Admin.Controllers
         }
 
         /// <summary>
-        /// Xử lý cập nhật mặt hàng trong giỏ hàng
+        /// Xử lý cập nhật mặt hàng trong đơn hàng
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> EditCartItem(int id, int productId, int quantity, decimal salePrice)
         {
-            if (!ApplicationContext.HasPermission(Permissions.OrderDetail))
+            if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
                 return RedirectToAction("AccessDenied", "Account");
+            var order = await SalesDataService.GetOrderAsync(id);
+            if (order == null) return RedirectToAction("Index");
+            if (order.Status != OrderStatusEnum.New && order.Status != OrderStatusEnum.Accepted)
+            {
+                TempData["ErrorMessage"] = "Không thể sửa đơn hàng (trạng thái không hợp lệ).";
+                return RedirectToAction("Detail", new { id });
+            }
             if (quantity <= 0)
                 await SalesDataService.DeleteDetailAsync(id, productId);
             else
@@ -259,14 +331,16 @@ namespace SV22T1020161.Admin.Controllers
         }
 
         /// <summary>
-        /// Giao diện xác nhận xóa mặt hàng khỏi giỏ hàng
+        /// Giao diện xác nhận xóa mặt hàng khỏi đơn hàng
         /// </summary>
         public async Task<IActionResult> DeleteCartItem(int id, int productId)
         {
-            if (!ApplicationContext.HasPermission(Permissions.OrderView))
+            if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
                 return RedirectToAction("AccessDenied", "Account");
             var order = await SalesDataService.GetOrderAsync(id);
             if (order == null) return RedirectToAction("Index");
+            if (order.Status != OrderStatusEnum.New && order.Status != OrderStatusEnum.Accepted)
+                return RedirectToAction("Detail", new { id });
             var detail = await SalesDataService.GetDetailAsync(id, productId);
             if (detail == null) return RedirectToAction("Detail", new { id });
             ViewBag.Order = order;
@@ -275,14 +349,16 @@ namespace SV22T1020161.Admin.Controllers
         }
 
         /// <summary>
-        /// Xử lý xóa mặt hàng khỏi giỏ hàng
+        /// Xử lý xóa mặt hàng khỏi đơn hàng
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> DeleteCartItem(int id, int productId, string confirm)
         {
-            if (!ApplicationContext.HasPermission(Permissions.OrderDetail))
+            if (!ApplicationContext.HasPermission(Permissions.OrderCreate))
                 return RedirectToAction("AccessDenied", "Account");
-            await SalesDataService.DeleteDetailAsync(id, productId);
+            var result = await SalesDataService.DeleteDetailAsync(id, productId);
+            if (!result)
+                TempData["ErrorMessage"] = "Không thể xóa mặt hàng (trạng thái không hợp lệ).";
             return RedirectToAction("Detail", new { id });
         }
 

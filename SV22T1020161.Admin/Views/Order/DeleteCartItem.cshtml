@@ -4,30 +4,16 @@
 }
 <div class="modal-header text-bg-danger">
     <strong class="modal-title">
-        <i class="bi bi-trash me-2"></i>Xóa mặt hàng khỏi đơn hàng
+        Xóa mặt hàng khỏi đơn hàng
     </strong>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body">
     <div class="alert alert-danger d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        Bạn có chắc chắn muốn xóa mặt hàng này ra khỏi đơn hàng không?
+        <i class="bi bi-info-circle me-2"></i>
+        Bạn có muốn xóa mặt hàng này ra khỏi đơn hàng không?
     </div>
-
-    <dl class="row mb-0">
-        <dt class="col-sm-4 text-muted">Đơn hàng</dt>
-        <dd class="col-sm-8 fw-bold">#@Model.OrderID</dd>
-
-        <dt class="col-sm-4 text-muted">Mặt hàng</dt>
-        <dd class="col-sm-8">@Model.ProductName</dd>
-
-        <dt class="col-sm-4 text-muted">Số lượng</dt>
-        <dd class="col-sm-8">@Model.Quantity @Model.Unit</dd>
-
-        <dt class="col-sm-4 text-muted">Thành tiền</dt>
-        <dd class="col-sm-8 fw-bold text-danger">@Model.TotalPrice.ToString("N0") ₫</dd>
-    </dl>
 </div>
 
 <div class="modal-footer">
@@ -35,8 +21,8 @@
     <form method="post" action="~/Order/DeleteCartItem/@Model.OrderID" style="display:inline;">
         <input type="hidden" name="productId" value="@Model.ProductID" />
         <input type="hidden" name="confirm" value="yes" />
-        <button type="submit" class="btn btn-danger">
-            <i class="bi bi-trash me-1"></i> Xóa mặt hàng
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check"></i> Chấp nhận
         </button>
     </form>
 </div>

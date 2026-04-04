@@ -55,7 +55,8 @@ namespace SV22T1020161.BusinessLayers
         /// <returns>Mã nhân viên được tạo mới.</returns>
         public static async Task<int> AddEmployeeAsync(Employee data)
         {
-            //TODO: Kiểm tra dữ liệu hợp lệ
+            if (!string.IsNullOrEmpty(data.Password))
+                data.Password = CryptHelper.MD5Hash(data.Password);
             return await employeeDB.AddAsync(data);
         }
 
@@ -125,7 +126,7 @@ namespace SV22T1020161.BusinessLayers
         /// <returns>True nếu cập nhật thành công, ngược lại False</returns>
         public static async Task<bool> ChangeEmployeePasswordAsync(int employeeID, string password)
         {
-            return await employeeDB.ChangePasswordAsync(employeeID, password);
+            return await employeeDB.ChangePasswordAsync(employeeID, CryptHelper.MD5Hash(password));
         }
 
         /// <summary>

@@ -41,6 +41,14 @@ namespace SV22T1020161.BusinessLayers
         }
 
         /// <summary>
+        /// Lấy tổng số đơn hàng
+        /// </summary>
+        public static async Task<int> GetOrderCountAsync()
+        {
+            return await dashboardDB.CountOrdersAsync();
+        }
+
+        /// <summary>
         /// Lấy doanh thu hôm nay
         /// </summary>
         public static async Task<decimal> GetTodayRevenueAsync()
@@ -54,6 +62,22 @@ namespace SV22T1020161.BusinessLayers
         public static async Task<List<OrderViewInfo>> GetRecentPendingOrdersAsync(int take = 5)
         {
             return await dashboardDB.GetRecentPendingOrdersAsync(take);
+        }
+
+        /// <summary>
+        /// Đơn hàng cần xử lý (mới / chờ giao) cho dashboard
+        /// </summary>
+        public static async Task<List<OrderViewInfo>> GetOrdersNeedingProcessingAsync(int take = 15)
+        {
+            return await dashboardDB.GetOrdersNeedingProcessingAsync(take);
+        }
+
+        /// <summary>
+        /// Top sản phẩm bán chạy
+        /// </summary>
+        public static async Task<List<ProductSalesRank>> GetTopSellingProductsAsync(int take = 4)
+        {
+            return await dashboardDB.GetTopSellingProductsAsync(take);
         }
 
         /// <summary>

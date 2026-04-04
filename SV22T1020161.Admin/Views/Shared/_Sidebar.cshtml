@@ -29,7 +29,6 @@
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation"
                 aria-label="Main navigation" data-accordion="false" id="navigation">
 
-                @* Trang chủ Dashboard *@
                 @if (HasPerm(Permissions.DashboardView))
                 {
                     <li class="nav-item">
@@ -40,12 +39,11 @@
                     </li>
                 }
 
-                @* Quản lý dữ liệu (Nhà cung cấp, Khách hàng, Người giao hàng, Nhân viên) *@
                 @if (HasPerm(Permissions.SupplierView) || HasPerm(Permissions.CustomerView) || HasPerm(Permissions.ShipperView) || HasPerm(Permissions.EmployeeView))
                 {
                     <li class="nav-item menu-open">
                         <a href="#" class="nav-link active">
-                            <i class="nav-icon bi bi-database"></i>
+                            <i class="nav-icon bi bi-archive"></i>
                             <p>
                                 Quản lý dữ liệu
                                 <i class="nav-arrow bi bi-chevron-right"></i>
@@ -58,10 +56,6 @@
                                     <a href="~/Supplier" class="nav-link">
                                         <i class="nav-icon bi bi-truck"></i>
                                         <p>Nhà cung cấp</p>
-                                        @if (HasPerm(Permissions.SupplierCreate))
-                                        {
-                                            <span class="badge bg-success float-end">+</span>
-                                        }
                                     </a>
                                 </li>
                             }
@@ -71,10 +65,6 @@
                                     <a href="~/Customer" class="nav-link">
                                         <i class="nav-icon bi bi-people"></i>
                                         <p>Khách hàng</p>
-                                        @if (HasPerm(Permissions.CustomerCreate))
-                                        {
-                                            <span class="badge bg-success float-end">+</span>
-                                        }
                                     </a>
                                 </li>
                             }
@@ -84,10 +74,6 @@
                                     <a href="~/Shipper" class="nav-link">
                                         <i class="nav-icon bi bi-bicycle"></i>
                                         <p>Người giao hàng</p>
-                                        @if (HasPerm(Permissions.ShipperCreate))
-                                        {
-                                            <span class="badge bg-success float-end">+</span>
-                                        }
                                     </a>
                                 </li>
                             }
@@ -97,10 +83,6 @@
                                     <a href="~/Employee" class="nav-link">
                                         <i class="nav-icon bi bi-people-fill"></i>
                                         <p>Nhân viên</p>
-                                        @if (HasPerm(Permissions.EmployeeCreate))
-                                        {
-                                            <span class="badge bg-success float-end">+</span>
-                                        }
                                     </a>
                                 </li>
                             }
@@ -108,12 +90,11 @@
                     </li>
                 }
 
-                @* Quản lý hàng hóa (Loại hàng, Mặt hàng) *@
                 @if (HasPerm(Permissions.CategoryView) || HasPerm(Permissions.ProductView))
                 {
                     <li class="nav-item menu-open">
                         <a href="#" class="nav-link active">
-                            <i class="nav-icon bi bi-boxes"></i>
+                            <i class="nav-icon bi bi-archive"></i>
                             <p>
                                 Quản lý hàng hóa
                                 <i class="nav-arrow bi bi-chevron-right"></i>
@@ -126,10 +107,6 @@
                                     <a href="~/Category" class="nav-link">
                                         <i class="nav-icon bi bi-collection"></i>
                                         <p>Loại hàng</p>
-                                        @if (HasPerm(Permissions.CategoryCreate))
-                                        {
-                                            <span class="badge bg-success float-end">+</span>
-                                        }
                                     </a>
                                 </li>
                             }
@@ -137,12 +114,8 @@
                             {
                                 <li class="nav-item">
                                     <a href="~/Product" class="nav-link">
-                                        <i class="nav-icon bi bi-box-seam"></i>
+                                        <i class="nav-icon bi bi-boxes"></i>
                                         <p>Mặt hàng</p>
-                                        @if (HasPerm(Permissions.ProductCreate))
-                                        {
-                                            <span class="badge bg-success float-end">+</span>
-                                        }
                                     </a>
                                 </li>
                             }
@@ -150,12 +123,11 @@
                     </li>
                 }
 
-                @* Quản lý bán hàng (Lập đơn hàng, Quản lý đơn hàng) *@
                 @if (HasPerm(Permissions.OrderView) || HasPerm(Permissions.OrderCreate))
                 {
                     <li class="nav-item menu-open">
                         <a href="#" class="nav-link active">
-                            <i class="nav-icon bi bi-cart4"></i>
+                            <i class="nav-icon bi bi-cash-stack"></i>
                             <p>
                                 Quản lý bán hàng
                                 <i class="nav-arrow bi bi-chevron-right"></i>

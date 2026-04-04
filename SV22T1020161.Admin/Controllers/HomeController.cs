@@ -19,17 +19,20 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         var todayRevenue = await DashboardDataService.GetTodayRevenueAsync();
-        var pendingOrders = await DashboardDataService.GetPendingOrderCountAsync();
+        var orderCount = await DashboardDataService.GetOrderCountAsync();
         var customerCount = await DashboardDataService.GetCustomerCountAsync();
         var productCount = await DashboardDataService.GetProductCountAsync();
-        var recentOrders = await DashboardDataService.GetRecentPendingOrdersAsync(5);
+        var topProducts = await DashboardDataService.GetTopSellingProductsAsync(4);
+        var pipelineOrders = await DashboardDataService.GetOrdersNeedingProcessingAsync(15);
         var monthlyRevenue = await DashboardDataService.GetMonthlyRevenueAsync(6);
 
+        ViewBag.Title = "Trang chủ";
         ViewBag.TodayRevenue = todayRevenue;
-        ViewBag.PendingOrders = pendingOrders;
+        ViewBag.OrderCount = orderCount;
         ViewBag.CustomerCount = customerCount;
         ViewBag.ProductCount = productCount;
-        ViewBag.RecentOrders = recentOrders;
+        ViewBag.TopProducts = topProducts;
+        ViewBag.PipelineOrders = pipelineOrders;
         ViewBag.MonthlyRevenue = monthlyRevenue;
 
         return View();

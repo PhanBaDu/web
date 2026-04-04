@@ -142,7 +142,8 @@ namespace SV22T1020161.BusinessLayers
         /// <returns>Mã khách hàng được tạo mới.</returns>
         public static async Task<int> AddCustomerAsync(Customer data)
         {
-            //TODO: Kiểm tra dữ liệu hợp lệ
+            if (!string.IsNullOrEmpty(data.Password))
+                data.Password = CryptHelper.MD5Hash(data.Password);
             return await customerDB.AddAsync(data);
         }
 
@@ -209,7 +210,7 @@ namespace SV22T1020161.BusinessLayers
         /// <returns></returns>
         public static async Task<bool> ChangePasswordCustomerAsync(int id, string password)
         {
-            return await customerDB.ChangePasswordAsync(id, password);
+            return await customerDB.ChangePasswordAsync(id, CryptHelper.MD5Hash(password));
         }
 
         #endregion

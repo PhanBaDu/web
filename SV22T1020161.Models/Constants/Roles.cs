@@ -78,18 +78,27 @@ public static class Roles
     };
 
     /// <summary>
-    /// Kiểm tra xem một Role có tồn tại hay không.
+    /// Lấy danh sách tất cả các Permissions duy nhất trong hệ thống.
     /// </summary>
-    public static bool IsValidRole(string roleName)
+    public static IEnumerable<string> GetAllPermissions()
     {
-        return RolePermissions.ContainsKey(roleName);
+        return RolePermissions.Values.SelectMany(p => p).Distinct();
     }
 
     /// <summary>
-    /// Lấy danh sách Permissions của một Role.
+    /// Kiểm tra xem một Role có tồn tại hay không (không phân biệt hoa thường).
+    /// </summary>
+    public static bool IsValidRole(string roleName)
+    {
+        return RolePermissions.Keys.Any(k => k.Equals(roleName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Lấy danh sách Permissions của một Role (không phân biệt hoa thường).
     /// </summary>
     public static string[] GetPermissions(string roleName)
     {
-        return RolePermissions.TryGetValue(roleName, out var perms) ? perms : Array.Empty<string>();
+        var key = RolePermissions.Keys.FirstOrDefault(k => k.Equals(roleName, StringComparison.OrdinalIgnoreCase));
+        return key != null ? RolePermissions[key] : Array.Empty<string>();
     }
 }

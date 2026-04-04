@@ -26,30 +26,32 @@ namespace SV22T1020161.BusinessLayers
         /// Kiểm tra đăng nhập
         /// </summary>
         /// <param name="userName">Tên đăng nhập</param>
-        /// <param name="password">Mật khẩu</param>
+        /// <param name="password">Mật khẩu (plain text sẽ được hash tự động)</param>
         /// <param name="userType">Loại người dùng (Nhân viên / Khách hàng)</param>
         /// <returns>Thông tin tài khoản nếu hợp lệ; ngược lại trả về null</returns>
         public static async Task<UserAccount?> AuthorizeAsync(string userName, string password, UserTypes userType)
         {
+            string hashedPwd = CryptHelper.MD5Hash(password);
             if (userType == UserTypes.Employee)
-                return await userAccountDB.AuthorizeAsync(userName, password);
+                return await userAccountDB.AuthorizeAsync(userName, hashedPwd);
             else
-                return await customerAccountDB.AuthorizeAsync(userName, password);
+                return await customerAccountDB.AuthorizeAsync(userName, hashedPwd);
         }
 
         /// <summary>
         /// Thực hiện đổi mật khẩu
         /// </summary>
         /// <param name="userName">Tên tài khoản</param>
-        /// <param name="password">Mật khẩu mới</param>
+        /// <param name="password">Mật khẩu mới (plain text sẽ được hash tự động)</param>
         /// <param name="userType">Loại người dùng</param>
         /// <returns>True nếu thành công</returns>
         public static async Task<bool> ChangePasswordAsync(string userName, string password, UserTypes userType)
         {
+            string hashedPwd = CryptHelper.MD5Hash(password);
             if (userType == UserTypes.Employee)
-                return await userAccountDB.ChangePasswordAsync(userName, password);
+                return await userAccountDB.ChangePasswordAsync(userName, hashedPwd);
             else
-                return await customerAccountDB.ChangePasswordAsync(userName, password);
+                return await customerAccountDB.ChangePasswordAsync(userName, hashedPwd);
         }
     }
 }

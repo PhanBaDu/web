@@ -40,6 +40,15 @@ namespace SV22T1020161.DataLayers.SqlServer
             }
         }
 
+        public async Task<int> CountOrdersAsync()
+        {
+            using (var connection = GetConnection())
+            {
+                var sql = @"SELECT COUNT(*) FROM Orders";
+                return await connection.ExecuteScalarAsync<int>(sql);
+            }
+        }
+
         public async Task<decimal> GetTodayRevenueAsync()
         {
             using (var connection = GetConnection())
@@ -71,6 +80,51 @@ namespace SV22T1020161.DataLayers.SqlServer
                             ORDER BY o.OrderTime DESC";
 
                 var data = (await connection.QueryAsync<OrderViewInfo>(sql, new { Status = (int)OrderStatusEnum.New, Take = take })).ToList();
+                return data;
+            }
+        }
+
+        public async Task<List<OrderViewInfo>> GetOrdersNeedingProcessingAsync(int take = 15)
+        {
+            using (var connection = GetConnection())
+            {
+                var sql = @"SELECT TOP (@Take) o.*,
+                                   c.CustomerName, c.ContactName AS CustomerContactName,
+                                   c.Phone AS CustomerPhone, c.Email AS CustomerEmail, c.Address AS CustomerAddress,
+                                   e.FullName AS EmployeeName,
+                                   s.ShipperName, s.Phone AS ShipperPhone,
+                                   (SELECT SUM(Quantity * SalePrice) FROM OrderDetails WHERE OrderID = o.OrderID) AS TotalAmount
+                            FROM Orders o
+                            LEFT JOIN Customers c ON o.CustomerID = c.CustomerID
+                            LEFT JOIN Employees e ON o.EmployeeID = e.EmployeeID
+                            LEFT JOIN Shippers s ON o.ShipperID = s.ShipperID
+                            WHERE o.Status IN (@NewStatus, @AcceptedStatus)
+                            ORDER BY o.OrderTime DESC";
+
+                var data = (await connection.QueryAsync<OrderViewInfo>(sql, new
+                {
+                    Take = take,
+                    NewStatus = (int)OrderStatusEnum.New,
+                    AcceptedStatus = (int)OrderStatusEnum.Accepted
+                })).ToList();
+                return data;
+            }
+        }
+
+        public async Task<List<ProductSalesRank>> GetTopSellingProductsAsync(int take = 4)
+        {
+            using (var connection = GetConnection())
+            {
+                var sql = @"SELECT TOP (@Take) p.ProductName AS ProductName, CAST(SUM(od.Quantity) AS INT) AS QuantitySold
+                            FROM OrderDetails od
+                            INNER JOIN Products p ON od.ProductID = p.ProductID
+                            INNER JOIN Orders o ON od.OrderID = o.OrderID
+                            WHERE o.Status = @CompletedStatus
+                            GROUP BY p.ProductID, p.ProductName
+                            ORDER BY SUM(od.Quantity) DESC";
+
+                var data = (await connection.QueryAsync<ProductSalesRank>(sql,
+                    new { Take = take, CompletedStatus = (int)OrderStatusEnum.Completed })).ToList();
                 return data;
             }
         }

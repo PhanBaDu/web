@@ -3,6 +3,7 @@
 @model SV22T1020161.Models.Sales.OrderViewInfo
 @{
     Layout = "_Layout";
+    ViewBag.Title = "Chi tiết đơn hàng";
     var details = ViewBag.Details as List<SV22T1020161.Models.Sales.OrderDetailViewInfo> ?? new List<SV22T1020161.Models.Sales.OrderDetailViewInfo>();
     var statusColors = new Dictionary<int, string>
     {
@@ -34,50 +35,67 @@
                  || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Cancelled
                  || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Rejected
                  || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Completed;
+
+    var showAccept = canAccept && ApplicationContext.HasPermission(Permissions.OrderAccept);
+    var showShip = canShip && ApplicationContext.HasPermission(Permissions.OrderShip);
+    var showFinish = canFinish && ApplicationContext.HasPermission(Permissions.OrderComplete);
+    var showCancel = canCancel && ApplicationContext.HasPermission(Permissions.OrderCancel);
+    var showReject = canReject && ApplicationContext.HasPermission(Permissions.OrderReject);
+    var showProcessDropdown = showAccept || showShip || showFinish || showCancel || showReject;
+    var showDestructiveDivider = showCancel || showReject;
+    var showDeleteBtn = canDelete && ApplicationContext.HasPermission(Permissions.OrderDelete);
+    var canEditLines = Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.New
+                    || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Accepted;
 }
 
 @section PageToolBar {
-    @if (canAccept && ApplicationContext.HasPermission(Permissions.OrderAccept))
+    @if (showProcessDropdown)
     {
         <div class="btn-group">
             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="bi bi-gear me-1"></i> Xử lý đơn hàng
+                <i class="bi bi-gear me-1"></i>
+                Xử lý đơn hàng
             </button>
             <ul class="dropdown-menu">
-                @if (canAccept && ApplicationContext.HasPermission(Permissions.OrderAccept))
+                @if (showAccept)
                 {
                     <li><a class="dropdown-item open-modal" href="~/Order/Accept/@Model.OrderID">Duyệt đơn hàng</a></li>
                 }
-                @if (canShip && ApplicationContext.HasPermission(Permissions.OrderShip))
+                @if (showShip)
                 {
                     <li><a class="dropdown-item open-modal" href="~/Order/Shipping/@Model.OrderID">Chuyển giao hàng</a></li>
                 }
-                @if (canFinish && ApplicationContext.HasPermission(Permissions.OrderComplete))
+                @if (showFinish)
                 {
                     <li><a class="dropdown-item open-modal" href="~/Order/Finish/@Model.OrderID">Hoàn tất đơn hàng</a></li>
                 }
-                @if (canReject && ApplicationContext.HasPermission(Permissions.OrderReject))
+                @if (showDestructiveDivider)
                 {
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger open-modal" href="~/Order/Reject/@Model.OrderID">Từ chối đơn hàng</a></li>
                 }
-                @if (canCancel && ApplicationContext.HasPermission(Permissions.OrderCancel))
+                @if (showCancel)
                 {
                     <li><a class="dropdown-item text-danger open-modal" href="~/Order/Cancel/@Model.OrderID">Hủy đơn hàng</a></li>
+                }
+                @if (showReject)
+                {
+                    <li><a class="dropdown-item text-danger open-modal" href="~/Order/Reject/@Model.OrderID">Từ chối đơn hàng</a></li>
                 }
             </ul>
         </div>
     }
 
-    @if (canDelete && ApplicationContext.HasPermission(Permissions.OrderDelete))
+    @if (showDeleteBtn)
     {
-        <a href="~/Order/Delete/@Model.OrderID" class="btn btn-danger ms-1 open-modal">
-            <i class="bi bi-trash"></i> Xóa
+        <a href="~/Order/Delete/@Model.OrderID" class="btn btn-danger open-modal@(showProcessDropdown ? " ms-1" : "")">
+            <i class="bi bi-trash"></i>
+            Xóa
         </a>
     }
 
-    <a href="~/Order" class="btn btn-secondary ms-1">
-        <i class="bi bi-arrow-left"></i> Quay lại
+    <a href="~/Order" class="btn btn-secondary@(showProcessDropdown || showDeleteBtn ? " ms-1" : "")">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
     </a>
 }
 
@@ -96,14 +114,15 @@
     </div>
 }
 
-<!-- TRẠNG THÁI ĐƠN HÀNG -->
+<!-- TRẠNG THÁI ĐƠN HÀNG — cấu trúc giống ui/Views/Order/Detail.cshtml -->
 <div class="alert @badge d-flex align-items-center mb-3">
     <i class="bi @icon fs-4 me-2"></i>
     <div>
-        <strong>Trạng thái:</strong> @text
+        <strong>Trạng thái đơn hàng:</strong>
+        @text
         @if (Model.FinishedTime.HasValue)
         {
-            <span>lúc <b>@Model.FinishedTime.Value.ToString("dd/MM/yyyy HH:mm")</b></span>
+            <span> lúc <b>@Model.FinishedTime.Value.ToString("dd/MM/yyyy HH:mm")</b></span>
         }
     </div>
 </div>
@@ -111,19 +130,22 @@
 <!-- THÔNG TIN ĐƠN HÀNG -->
 <div class="card card-primary card-outline mb-3">
     <div class="card-header">
-        <h5 class="card-title mb-0"><i class="bi bi-receipt me-2"></i>Thông tin đơn hàng</h5>
+        <h5 class="card-title mb-0">
+            <i class="bi bi-receipt me-2"></i>
+            Thông tin đơn hàng
+        </h5>
     </div>
     <div class="card-body ps-4 pe-4">
-        <div class="row mb-2 pb-2" style="border-bottom: 1px dotted #ccc;">
+        <div class="row mb-2">
             <div class="col-md-3 fw-bold">Mã đơn hàng</div>
-            <div class="col-md-3 fw-semibold text-primary">#@Model.OrderID</div>
+            <div class="col-md-3">#@Model.OrderID</div>
             <div class="col-md-3 fw-bold">Ngày lập</div>
             <div class="col-md-3">@Model.OrderTime.ToString("dd/MM/yyyy HH:mm")</div>
         </div>
-        <div class="row pt-2">
-            <div class="col-md-3 fw-bold">Nhân viên xử lý</div>
+        <div class="row">
+            <div class="col-md-3 fw-bold">Nhân viên phụ trách</div>
             <div class="col-md-3">@(string.IsNullOrEmpty(Model.EmployeeName) ? "—" : Model.EmployeeName)</div>
-            <div class="col-md-3 fw-bold">Ngày duyệt</div>
+            <div class="col-md-3 fw-bold">Ngày nhận đơn</div>
             <div class="col-md-3">@(Model.AcceptTime.HasValue ? Model.AcceptTime.Value.ToString("dd/MM/yyyy HH:mm") : "—")</div>
         </div>
     </div>
@@ -132,22 +154,27 @@
 <!-- THÔNG TIN KHÁCH HÀNG -->
 <div class="card card-info card-outline mb-3">
     <div class="card-header">
-        <h5 class="card-title mb-0"><i class="bi bi-person me-2"></i>Thông tin khách hàng</h5>
+        <h5 class="card-title mb-0">
+            <i class="bi bi-person me-2"></i>
+            Thông tin khách hàng
+        </h5>
     </div>
     <div class="card-body ps-4 pe-4">
-        <div class="row mb-2 pb-2" style="border-bottom: 1px dotted #ccc;">
+        <div class="row mb-2">
             <div class="col-md-3 fw-bold">Khách hàng</div>
             <div class="col-md-3">@Model.CustomerName</div>
             <div class="col-md-3 fw-bold">Tên giao dịch</div>
             <div class="col-md-3">@Model.CustomerContactName</div>
         </div>
-        <div class="row mb-2 pb-2" style="border-bottom: 1px dotted #ccc;">
+        <div class="row mb-2">
             <div class="col-md-3 fw-bold">Email</div>
-            <div class="col-md-3">@Model.CustomerEmail</div>
-            <div class="col-md-3 fw-bold">Điện thoại</div>
-            <div class="col-md-3">@Model.CustomerPhone</div>
+            <div class="col-md-9">@Model.CustomerEmail</div>
         </div>
-        <div class="row pt-2">
+        <div class="row mb-2">
+            <div class="col-md-3 fw-bold">Điện thoại</div>
+            <div class="col-md-9">@(string.IsNullOrEmpty(Model.CustomerPhone) ? "—" : Model.CustomerPhone)</div>
+        </div>
+        <div class="row">
             <div class="col-md-3 fw-bold">Địa chỉ</div>
             <div class="col-md-9">@Model.CustomerAddress</div>
         </div>
@@ -157,20 +184,23 @@
 <!-- THÔNG TIN GIAO HÀNG -->
 <div class="card card-success card-outline mb-3">
     <div class="card-header">
-        <h5 class="card-title mb-0"><i class="bi bi-truck me-2"></i>Thông tin giao hàng</h5>
+        <h5 class="card-title mb-0">
+            <i class="bi bi-truck me-2"></i>
+            Thông tin giao hàng
+        </h5>
     </div>
     <div class="card-body ps-4 pe-4">
-        <div class="row mb-2 pb-2" style="border-bottom: 1px dotted #ccc;">
+        <div class="row mb-2">
             <div class="col-md-3 fw-bold">Người giao hàng</div>
             <div class="col-md-3">@(string.IsNullOrEmpty(Model.ShipperName) ? "—" : Model.ShipperName)</div>
             <div class="col-md-3 fw-bold">Điện thoại</div>
             <div class="col-md-3">@(string.IsNullOrEmpty(Model.ShipperPhone) ? "—" : Model.ShipperPhone)</div>
         </div>
-        <div class="row mb-2 pb-2" style="border-bottom: 1px dotted #ccc;">
-            <div class="col-md-3 fw-bold">Địa chỉ giao</div>
+        <div class="row mb-2">
+            <div class="col-md-3 fw-bold">Địa chỉ giao hàng</div>
             <div class="col-md-9">@Model.DeliveryAddress</div>
         </div>
-        <div class="row pt-2">
+        <div class="row">
             <div class="col-md-3 fw-bold">Tỉnh / Thành</div>
             <div class="col-md-9">@Model.DeliveryProvince</div>
         </div>
@@ -180,20 +210,22 @@
 <!-- DANH SÁCH MẶT HÀNG -->
 <div class="card card-secondary card-outline">
     <div class="card-header">
-        <h5 class="card-title mb-0"><i class="bi bi-box-seam me-2"></i>Danh sách mặt hàng</h5>
+        <h5 class="card-title mb-0">
+            <i class="bi bi-box-seam me-2"></i>
+            Danh sách mặt hàng
+        </h5>
     </div>
-    <div class="card-body table-responsive p-2">
-        <table class="table table-bordered table-hover align-middle mb-0">
+    <div class="card-body table-responsive">
+        <table class="table table-bordered table-hover align-middle">
             <thead class="table-secondary text-center">
                 <tr>
-                    <th style="width:50px">STT</th>
+                    <th>STT</th>
                     <th>Tên hàng</th>
-                    <th style="width:80px">ĐVT</th>
-                    <th style="width:100px">Số lượng</th>
-                    <th style="width:150px">Giá bán</th>
-                    <th style="width:150px">Thành tiền</th>
-                    @if (Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.New
-                      || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Accepted)
+                    <th>ĐVT</th>
+                    <th>Số lượng</th>
+                    <th>Giá</th>
+                    <th>Thành tiền</th>
+                    @if (canEditLines)
                     {
                         <th style="width:90px"></th>
                     }
@@ -213,10 +245,9 @@
                         <td>@item.ProductName</td>
                         <td class="text-center">@item.Unit</td>
                         <td class="text-center">@item.Quantity</td>
-                        <td class="text-end">@item.SalePrice.ToString("N0") ₫</td>
-                        <td class="text-end fw-semibold">@itemTotal.ToString("N0") ₫</td>
-                        @if (Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.New
-                          || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Accepted)
+                        <td class="text-end">@item.SalePrice.ToString("N0")</td>
+                        <td class="text-end">@itemTotal.ToString("N0")</td>
+                        @if (canEditLines)
                         {
                             <td class="text-end text-nowrap">
                                 <a href="~/Order/EditCartItem/@Model.OrderID?productId=@item.ProductID" class="btn btn-sm btn-primary open-modal" title="Sửa">
@@ -231,11 +262,10 @@
                 }
             </tbody>
             <tfoot>
-                <tr class="table-primary">
-                    <th colspan="@(Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.New || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Accepted ? 5 : 5)" class="text-end">Tổng cộng:</th>
-                    <th class="text-end text-danger fw-bold">@total.ToString("N0") ₫</th>
-                    @if (Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.New
-                      || Model.Status == SV22T1020161.Models.Sales.OrderStatusEnum.Accepted)
+                <tr>
+                    <th colspan="5" class="text-end">Tổng cộng</th>
+                    <th class="text-end">@total.ToString("N0")</th>
+                    @if (canEditLines)
                     {
                         <th></th>
                     }
@@ -244,3 +274,15 @@
         </table>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .card-body .row {
+            border-bottom: 1px dotted #646464;
+        }
+
+        .card-body .row:last-child {
+            border-bottom: none;
+        }
+    </style>
+}

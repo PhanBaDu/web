@@ -126,7 +126,7 @@ namespace SV22T1020161.Admin
             get
             {
                 var user = HttpContext?.User;
-                if (user == null || !user.Identity.IsAuthenticated)
+                if (user == null || user.Identity?.IsAuthenticated != true)
                     return null;
                 return new WebUser(user);
             }
