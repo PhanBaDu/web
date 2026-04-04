@@ -34,6 +34,15 @@ namespace SV22T1020161.Shop.Controllers
             ViewBag.Status = status;
             ViewBag.SearchValue = searchValue;
 
+            // Fetch details for each order to show products in cards
+            var detailsDict = new Dictionary<int, List<OrderDetailViewInfo>>();
+            foreach (var order in data.DataItems)
+            {
+                var details = await SalesDataService.ListDetailsAsync(order.OrderID);
+                detailsDict[order.OrderID] = details;
+            }
+            ViewBag.OrderDetails = detailsDict;
+
             return View(data);
         }
 

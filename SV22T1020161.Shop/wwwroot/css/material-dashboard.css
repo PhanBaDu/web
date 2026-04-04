@@ -455,7 +455,7 @@ a:hover { color: var(--md-on-primary-container); }
 .md-card .md-card-header {
   padding: 16px 24px;
   border-bottom: 1px solid var(--md-outline-variant);
-  background-color: var(--md-surface-container-low);
+  background-color: transparent;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -475,7 +475,7 @@ a:hover { color: var(--md-on-primary-container); }
 .md-card .md-card-footer {
   padding: 12px 24px;
   border-top: 1px solid var(--md-outline-variant);
-  background-color: var(--md-surface-container-low);
+  background-color: transparent;
 }
 
 /* ── Material Buttons ─────────────────────────────────────── */
@@ -1320,41 +1320,48 @@ a:hover { color: var(--md-on-primary-container); }
   text-align: center;
 }
 
-/* ── Status Filter Tabs ───────────────────────────────────── */
+/* ── Status Filter Tabs (Cupertino Style) ───────────────────────── */
 .md-status-tabs {
   display: inline-flex;
-  background-color: var(--md-surface-container-low);
-  border: 1px solid var(--md-outline-variant);
-  border-radius: var(--md-radius-full);
+  background-color: var(--md-surface-container-highest);
+  border-radius: var(--md-radius-md);
   padding: 4px;
-  gap: 4px;
+  gap: 2px;
+  border: none;
 }
 
 .md-status-tab {
-  padding: 6px 16px;
-  border-radius: var(--md-radius-full);
+  padding: 0 16px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--md-on-surface-variant);
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all 0.15s var(--md-decelerated);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
 }
 
-.md-status-tab:hover { color: var(--md-on-surface); }
+.md-status-tab:hover { 
+  background-color: rgba(0,0,0,0.03);
+  color: var(--md-on-surface); 
+}
 
 .md-status-tab.active {
   background-color: var(--md-surface);
   color: var(--md-primary);
-  box-shadow: var(--md-elevation-1);
-  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .md-status-tab.active-danger {
-  background-color: var(--md-error-container);
+  background-color: var(--md-surface);
   color: var(--md-error);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 /* ── Order Card ───────────────────────────────────────────── */

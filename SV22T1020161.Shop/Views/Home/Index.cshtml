@@ -169,32 +169,15 @@
     <!-- Product List -->
     <div class="col-lg-9">
         <!-- Dynamic Search Status -->
-        <div class="md-search-status mb-4">
-            @{
-                string categoryPart = "";
-                if (currentCategoryID > 0)
-                {
-                    var cat = categories?.DataItems?.FirstOrDefault(c => c.CategoryID == currentCategoryID);
-                    categoryPart = cat != null ? $"trong danh mục \"{cat.CategoryName}\"" : "";
-                }
-
-                string searchPart = !string.IsNullOrEmpty(currentSearchValue) ? $"từ khóa \"{currentSearchValue}\"" : "";
-                
-                string combined = "";
-                if (!string.IsNullOrEmpty(searchPart) && !string.IsNullOrEmpty(categoryPart)) combined = $"{searchPart} {categoryPart}";
-                else if (!string.IsNullOrEmpty(searchPart)) combined = searchPart;
-                else if (!string.IsNullOrEmpty(categoryPart)) combined = categoryPart;
-
-                string finalMsg = string.IsNullOrEmpty(combined) ? "Tất cả sản phẩm" : $"Kết quả {combined}";
-            }
+        <div class="md-search-status mb-4" id="dynamicSearchStatus">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="md-search-info">
-                    <span class="text-muted-md">@finalMsg</span>
+                    <span class="text-muted-md" id="searchStatusText">Kết quả tìm kiếm</span>
                     <span class="mx-2 text-muted-md opacity-25">|</span>
-                    <span class="md-search-count">Tìm thấy <strong>@totalProducts.ToString("N0", new System.Globalization.CultureInfo("vi-VN"))</strong> sản phẩm</span>
+                    <span class="md-search-count">Tìm thấy <strong id="productCountDisplayStatus">@totalProducts.ToString("N0", new System.Globalization.CultureInfo("vi-VN"))</strong> sản phẩm</span>
                 </div>
                 <div class="md-search-sort">
-                    <span class="text-muted-md" style="font-size: 0.8125rem;">Hiển thị <strong>@productResult?.DataItems?.Count()</strong> / trang</span>
+                    <span class="text-muted-md">Hiển thị <strong>@productResult?.DataItems?.Count()</strong> / trang</span>
                 </div>
             </div>
         </div>
@@ -252,7 +235,23 @@
             if (!$meta.length) return;
             var n = parseInt($meta.attr("data-row-count"), 10);
             if (isNaN(n)) n = 0;
-            $("#productCountDisplay").text(n.toLocaleString("vi-VN"));
+            $("#productCountDisplayStatus").text(n.toLocaleString("vi-VN"));
+            
+            var catName = $("#searchCategoryID option:selected").text().trim();
+            var catVal = $("#searchCategoryID").val();
+            var searchVal = $("#searchValueState").val() || "";
+
+            var combined = "";
+            var searchPart = searchVal ? `từ khóa "${searchVal}"` : "";
+            var categoryPart = (catVal && catVal !== "0") ? `trong danh mục "${catName}"` : "";
+
+            if (searchPart && categoryPart) combined = `${searchPart} ${categoryPart}`;
+            else if (searchPart) combined = searchPart;
+            else if (categoryPart) combined = categoryPart;
+
+            var finalMsg = combined ? `Kết quả ${combined}` : "Tất cả sản phẩm";
+            $("#searchStatusText").text(finalMsg);
+            
             $meta.remove();
         }
 

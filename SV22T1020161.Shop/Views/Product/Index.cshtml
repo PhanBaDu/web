@@ -5,14 +5,27 @@
 
 <div class="pt-4 animate-in">
     <!-- Page Header -->
-    <div class="mb-6">
-        <div class="page-header">
-            <div class="page-header-icon">
-                <i class="bi bi-bag" style="font-size: 1.25rem;"></i>
-            </div>
+    <!-- Page Header & Search Status Row -->
+    <div class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-4">
+        <!-- Header Left -->
+        <div class="page-header" style="margin-bottom: 0;">
             <div>
                 <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 2px;">Khám phá sản phẩm</h1>
                 <p class="text-muted-md mb-0" style="font-size: 0.875rem;">Tìm kiếm hàng ngàn sản phẩm chất lượng</p>
+            </div>
+        </div>
+
+        <!-- Header Right (Dynamic Search Status) -->
+        <div class="md-search-status border-0 pb-0 mb-0" id="dynamicSearchStatus" style="flex-grow:1; display:flex; justify-content:flex-end;">
+            <div class="d-flex align-items-center flex-wrap gap-3">
+                <div class="md-search-info">
+                    <span class="text-muted-md" id="searchStatusText">Kết quả tìm kiếm</span>
+                    <span class="mx-2 text-muted-md opacity-25">|</span>
+                    <span class="md-search-count">Tìm thấy <strong id="productCountDisplayStatus">...</strong> sản phẩm</span>
+                </div>
+                <div class="md-search-sort" style="margin-left: 8px;">
+                    <span class="text-muted-md">Hiển thị <strong>@Model.PageSize</strong> / trang</span>
+                </div>
             </div>
         </div>
     </div>
@@ -26,11 +39,7 @@
                         <i class="bi bi-sliders" style="color: var(--md-primary);"></i>
                         Bộ lọc tìm kiếm
                     </span>
-                    <span class="md-filter-title-meta">
-                        <i class="bi bi-grid-3x3-gap" style="color: var(--md-primary);"></i>
-                        <strong id="productCountDisplay">…</strong> sản phẩm
-                        <span style="color: var(--md-primary); font-weight: 700;">12 / trang</span>
-                    </span>
+
                 </div>
 
                 <form id="formSearch" method="get" class="d-flex flex-column gap-3">
@@ -99,7 +108,7 @@
                         <button type="button" onclick="doSearch(1)" class="md-btn md-btn-primary w-100">
                             <i class="bi bi-funnel"></i> Áp dụng bộ lọc
                         </button>
-                        <button type="button" onclick="resetFilter()" class="md-btn md-btn-text w-100">
+                        <button type="button" onclick="resetFilter()" class="md-btn md-btn-outlined w-100">
                             Xóa tất cả bộ lọc
                         </button>
                     </div>
@@ -139,7 +148,23 @@
             if (!$meta.length) return;
             var n = parseInt($meta.attr("data-row-count"), 10);
             if (isNaN(n)) n = 0;
-            $("#productCountDisplay").text(n.toLocaleString("vi-VN"));
+            $("#productCountDisplayStatus").text(n.toLocaleString("vi-VN"));
+
+            var catName = $("#searchCategoryID option:selected").text().trim();
+            var catVal = $("#searchCategoryID").val();
+            var searchVal = $("#searchValueState").val() || "";
+
+            var combined = "";
+            var searchPart = searchVal ? `từ khóa "${searchVal}"` : "";
+            var categoryPart = (catVal && catVal !== "0") ? `trong danh mục "${catName}"` : "";
+
+            if (searchPart && categoryPart) combined = `${searchPart} ${categoryPart}`;
+            else if (searchPart) combined = searchPart;
+            else if (categoryPart) combined = categoryPart;
+
+            var finalMsg = combined ? `Kết quả ${combined}` : "Tất cả sản phẩm";
+            $("#searchStatusText").text(finalMsg);
+
             $meta.remove();
         }
 
