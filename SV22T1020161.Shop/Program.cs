@@ -24,7 +24,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                     option.Cookie.Name = "SV22T1020161.Shop";
                     option.LoginPath = "/Account/Login";
                     option.AccessDeniedPath = "/Account/AccessDenied";
-                    option.ExpireTimeSpan = TimeSpan.FromDays(7);
+                    option.ExpireTimeSpan = TimeSpan.FromDays(30);
                     option.SlidingExpiration = true;
                     option.Cookie.HttpOnly = true;
                     option.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;

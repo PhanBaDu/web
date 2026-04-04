@@ -14,7 +14,7 @@ Directory.CreateDirectory(keysFolder);
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
     .SetApplicationName("SV22T1020161.Admin")
-    .SetDefaultKeyLifetime(TimeSpan.FromDays(180)); // key sống 6 tháng
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(365)); // key sống 1 năm
 
 // ── 2. HTTP Context & MVC ─────────────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();
@@ -31,7 +31,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         option.Cookie.Name = "SV22T1020161.Admin";
         option.LoginPath = "/Account/Login";
         option.AccessDeniedPath = "/Account/AccessDenied";
-        option.ExpireTimeSpan = TimeSpan.FromDays(7);      // cookie sống 7 ngày tuyệt đối
+        option.ExpireTimeSpan = TimeSpan.FromDays(30);      // cookie sống 30 ngày tuyệt đối
         option.SlidingExpiration = true;                    // reset timer mỗi lần dùng
         option.Cookie.HttpOnly = true;
         option.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
