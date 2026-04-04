@@ -63,6 +63,9 @@ appsettings.Local.json
 *.pfx
 *.publishsettings
 
+# Cursor AI
+.cursor/
+
 # Others
 .DS_Store
 Thumbs.db
