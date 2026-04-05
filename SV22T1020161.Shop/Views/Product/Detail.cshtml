@@ -73,10 +73,10 @@
 
     <!-- ===================== PRODUCT INFO (ben phai) ===================== -->
     <div class="col-lg-7">
-
-        <!-- Unit + Name -->
-        <div class="mb-4">
-            <div class="d-flex align-items-center gap-2 mb-2">
+        <div style="background: #ffffff; border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+            <!-- Unit + Name -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
                 <span class="md-badge md-badge-neutral">@Model.Unit</span>
             </div>
             <h1 style="font-size:1.375rem;font-weight:700;color:var(--md-on-surface);line-height:1.3;">
@@ -85,19 +85,19 @@
         </div>
 
         <!-- Price -->
-        <div class="md-card mb-4" style="background:white; border-width: 0; box-shadow: none;">
-            <div class="md-card-body p-0">
-                <div class="d-flex align-items-baseline gap-2">
-                    <span style="font-size:0.875rem;color:var(--md-on-surface-variant);font-weight:500;">Giá bán</span>
-                </div>
-                <div class="d-flex align-items-baseline gap-1 mt-1">
-                    <span style="font-size:2rem;font-weight:800;color:var(--md-error);letter-spacing:-0.02em;">
-                        @Model.Price.ToString("N0")
-                    </span>
-                    <span style="font-size:1.25rem;font-weight:700;color:var(--md-error);">₫</span>
-                </div>
+        <div class="mb-4">
+            <div class="d-flex align-items-baseline gap-2">
+                <span class="text-muted-md">Giá bán</span>
+            </div>
+            <div class="d-flex align-items-baseline gap-1 mt-1">
+                <span style="font-size:2rem;font-weight:800;color:var(--md-error);letter-spacing:-0.02em;">
+                    @Model.Price.ToString("N0")
+                </span>
+                <span style="font-size:1.25rem;font-weight:700;color:var(--md-error);">₫</span>
             </div>
         </div>
+
+        <hr class="md-divider mb-4">
 
         <!-- Mo ta ngan -->
         @if (!string.IsNullOrWhiteSpace(Model.ProductDescription))
@@ -124,8 +124,8 @@
                     <!-- Them vao gio -->
                     <button type="button"
                             onclick="addToCart(@Model.ProductID, parseInt($('#detail-qty').val(), 10) || 1)"
-                            class="md-btn md-btn-outlined flex-fill"
-                            style="border-color:var(--md-primary);color:var(--md-primary);">
+                            class="md-btn flex-fill"
+                            style="background: #ffffff; color: var(--md-primary); border: 1px solid var(--md-outline-variant);">
                         <i class="bi bi-cart-plus"></i>
                         Thêm vào giỏ
                     </button>
@@ -133,7 +133,7 @@
                     <button type="button"
                             onclick="document.cookie='quickbuy=@Model.ProductID'; window.location='/Cart/Checkout'"
                             class="md-btn md-btn-primary flex-fill"
-                            style="box-shadow:0 4px 12px rgba(103,80,164,.35);">
+                            style="box-shadow: none !important;">
                         <i class="bi bi-lightning-fill"></i>
                         Mua ngay
                     </button>
@@ -149,6 +149,7 @@
                 </span>
             </div>
         }
+        </div> <!-- End of white wrapper -->
 
         <!-- Thong tin chi tiet -->
         <div class="md-card mb-4">

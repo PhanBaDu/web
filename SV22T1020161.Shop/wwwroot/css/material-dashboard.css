@@ -876,7 +876,7 @@ a:hover { color: var(--md-on-primary-container); }
 /* ── Material Footer ─────────────────────────────────────── */
 .md-footer {
   background-color: var(--md-surface);
-  border-top: 1px solid var(--md-outline-variant);
+  border-top: none;
   padding: 48px 0 24px;
   margin-top: auto;
 }
@@ -913,8 +913,8 @@ a:hover { color: var(--md-on-primary-container); }
 
 /* ── Material Sidebar Filter ──────────────────────────────── */
 .md-filter-card {
-  background-color: var(--md-surface);
-  border: none;
+  background-color: #ffffff !important;
+  border: 1px solid var(--md-outline-variant);
   border-radius: var(--md-radius-md);
   box-shadow: none;
   padding: 20px;

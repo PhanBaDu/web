@@ -15,6 +15,24 @@ namespace SV22T1020161.Shop.Controllers
         private void SaveCart(List<CartItem> cart) => CartSessionHelper.SaveCart(HttpContext, cart);
         private int GetCartItemCount() => CartSessionHelper.GetCartCount(HttpContext);
 
+        private List<CartItem> GetSelectedItems()
+        {
+            var cart = GetCart();
+            if (Request.Cookies.TryGetValue("selectedCartItems", out string? cookieVal) && !string.IsNullOrWhiteSpace(cookieVal))
+            {
+                var ids = new HashSet<int>();
+                foreach (var idStr in cookieVal.Split(','))
+                {
+                    if (int.TryParse(idStr.Trim(), out int parsed)) ids.Add(parsed);
+                }
+                if (ids.Count > 0)
+                {
+                    return cart.Where(i => ids.Contains(i.ProductID)).ToList();
+                }
+            }
+            return cart;
+        }
+
         public IActionResult Index()
         {
             var cart = GetCart();
@@ -163,7 +181,7 @@ namespace SV22T1020161.Shop.Controllers
         [Authorize]
         public async Task<IActionResult> Checkout()
         {
-            var cart = GetCart();
+            var cart = GetSelectedItems();
             if (cart.Count == 0)
             {
                 TempData["ErrorMessage"] = "Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi thanh toán.";
@@ -196,7 +214,7 @@ namespace SV22T1020161.Shop.Controllers
             int? shipperID,
             string note = "")
         {
-            var cart = GetCart();
+            var cart = GetSelectedItems();
             if (cart.Count == 0) return RedirectToAction("Index");
 
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -255,8 +273,16 @@ namespace SV22T1020161.Shop.Controllers
                 });
             }
 
-            // Clear Cart
-            CartSessionHelper.ClearCart(HttpContext);
+            // Remove only purchased items
+            var fullCart = GetCart();
+            foreach (var item in cart)
+            {
+                var c = fullCart.FirstOrDefault(x => x.ProductID == item.ProductID);
+                if (c != null) fullCart.Remove(c);
+            }
+            SaveCart(fullCart);
+            // Clear the cookie so it doesn't affect future selections
+            Response.Cookies.Delete("selectedCartItems");
 
             TempData["SuccessMessage"] = $"Đặt hàng thành công! Mã đơn hàng #{orderID}. Đơn hàng đang được chờ duyệt.";
             return RedirectToAction("Status", "Order", new { id = orderID });

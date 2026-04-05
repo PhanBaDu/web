@@ -5,6 +5,32 @@
     var total = cart.Sum(c => c.TotalPrice);
 }
 
+<style>
+    .md-shipping-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid var(--md-outline-variant);
+        padding: 16px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+    }
+    .md-shipping-card:hover {
+        background: var(--md-surface-container-low);
+    }
+    .md-shipping-card.active {
+        background: var(--md-primary-container) !important;
+        border-color: var(--md-primary) !important;
+    }
+    .md-shipping-card input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--md-primary);
+    }
+</style>
+
 <div class="animate-in">
     <!-- Page Header -->
     <div class="page-header mb-5">
@@ -89,12 +115,13 @@
                         }
                         else
                         {
+                            var first = true;
                             @foreach (var s in shippers)
                             {
-                                <label class="md-shipping-card">
-                                    <input type="radio" name="ShipperID" value="@s.ShipperID" required />
+                                <label class="md-shipping-card @(first ? "active" : "")">
+                                    <input type="radio" name="ShipperID" value="@s.ShipperID" required @(first ? "checked" : "") onclick="updateActiveShipper(this)" />
                                     <div class="d-flex align-items-center gap-3 flex-grow-1">
-                                        <div style="width:40px;height:40px;border-radius:var(--md-radius-full);background:var(--md-primary-container);display:flex;align-items:center;justify-content:center;color:var(--md-primary);">
+                                        <div style="width:40px;height:40px;border-radius:var(--md-radius-full);background:var(--md-surface-container-high);display:flex;align-items:center;justify-content:center;color:var(--md-primary);">
                                             <i class="bi bi-truck"></i>
                                         </div>
                                         <div>
@@ -104,6 +131,7 @@
                                     </div>
                                     <span class="ms-auto md-badge md-badge-success">Miễn phí</span>
                                 </label>
+                                first = false;
                             }
                         }
                     }
@@ -117,12 +145,12 @@
                     <h3 style="font-size:1rem;font-weight:700;margin:0;">Phương thức thanh toán</h3>
                 </div>
                 <div class="md-card-body">
-                    <div class="payment-cod-card">
-                        <div class="payment-cod-icon">
+                    <div class="payment-cod-card" style="background: var(--md-primary-container); border: 1px solid var(--md-primary); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
+                        <div class="payment-cod-icon" style="width:40px;height:40px;border-radius:var(--md-radius-full);background:var(--md-primary);display:flex;align-items:center;justify-content:center;color:#ffffff;flex-shrink:0;">
                             <i class="bi bi-cash-stack"></i>
                         </div>
-                        <div>
-                            <strong style="font-size:0.9375rem;">Thanh toán khi nhận hàng (COD)</strong>
+                        <div class="flex-grow-1">
+                            <strong style="font-size:0.9375rem; color: var(--md-on-primary-container);">Thanh toán khi nhận hàng (COD)</strong>
                             <p class="mb-0 text-muted-md" style="font-size:0.8125rem;">Thanh toán bằng tiền mặt khi shipper giao hàng đến.</p>
                         </div>
                         <i class="bi bi-check-circle-fill ms-auto" style="color:var(--md-primary);font-size:1.5rem;"></i>
@@ -199,3 +227,18 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    <script>
+        function updateActiveShipper(input) {
+            // Remove active class from all shipping cards
+            document.querySelectorAll('.md-shipping-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            // Add active class to the parent label of the checked radio
+            if (input.checked) {
+                input.closest('.md-shipping-card').classList.add('active');
+            }
+        }
+    </script>
+}
