@@ -205,17 +205,103 @@
     </div>
 
     <!-- Pagination -->
-    @if (Model.PageCount > 1)
+    @if (Model.PageCount >= 1)
     {
-        <div class="d-flex justify-content-center mt-5">
-            <ul class="md-pagination">
-                @for (int p = 1; p <= Model.PageCount; p++)
+        int windowSize = 7;
+        int half = windowSize / 2;
+        int winStart = Model.Page - half;
+        int winEnd = Model.Page + half;
+        if (winStart < 1)
+        {
+            winStart = 1;
+            winEnd = Math.Min(windowSize, Model.PageCount);
+        }
+        if (winEnd > Model.PageCount)
+        {
+            winEnd = Model.PageCount;
+            winStart = Math.Max(1, Model.PageCount - windowSize + 1);
+        }
+
+        bool showLead1 = winStart > 1;
+        bool showLeadEllipsis = winStart > 2;
+        bool showTrailEllipsis = winEnd < Model.PageCount - 1;
+        bool showLast = winEnd < Model.PageCount;
+
+        string BuildUrl(int p) => $"/Order/History?status={currentStatus}&page={p}&searchValue={ViewBag.SearchValue}";
+
+        <div class="d-flex justify-content-center mt-5 pt-4" style="border-top:1px solid var(--md-outline-variant);">
+            <ul class="md-pagination mb-0 justify-content-center" style="min-height:44px; display:flex; gap:4px;">
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
+                    @if (Model.Page > 1)
+                    {
+                        <a href="@BuildUrl(Model.Page - 1)" class="page-link" aria-label="Trang trước">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="page-link" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
+                    }
+                </li>
+
+                @if (showLead1)
                 {
-                    <li class="page-item @(p == Model.Page ? "active" : "")">
-                        <a href="/Order/History?status=@currentStatus&page=@p&searchValue=@ViewBag.SearchValue"
-                           class="page-link">@p</a>
+                    <li class="page-item">
+                        <a href="@BuildUrl(1)" class="page-link">1</a>
                     </li>
                 }
+                
+                @if (showLeadEllipsis)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">&hellip;</span>
+                    </li>
+                }
+
+                @for (int i = 0; i < windowSize; i++)
+                {
+                    int p = winStart + i;
+                    if (p <= winEnd && p <= Model.PageCount && p >= 1)
+                    {
+                        if (p == Model.Page)
+                        {
+                            <li class="page-item active"><span class="page-link">@p</span></li>
+                        }
+                        else
+                        {
+                            <li class="page-item">
+                                <a href="@BuildUrl(p)" class="page-link">@p</a>
+                            </li>
+                        }
+                    }
+                }
+
+                @if (showTrailEllipsis)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">&hellip;</span>
+                    </li>
+                }
+                
+                @if (showLast)
+                {
+                    <li class="page-item">
+                        <a href="@BuildUrl(Model.PageCount)" class="page-link">@Model.PageCount</a>
+                    </li>
+                }
+
+                <li class="page-item @(Model.Page >= Model.PageCount ? "disabled" : null)">
+                    @if (Model.Page < Model.PageCount)
+                    {
+                        <a href="@BuildUrl(Model.Page + 1)" class="page-link" aria-label="Trang sau">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="page-link" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+                    }
+                </li>
             </ul>
         </div>
     }

@@ -276,7 +276,8 @@
                     showError('profileForm', 'CustomerName', 'Họ tên không được để trống.');
                     return;
                 }
-                const nameRegex = /^[\p{L} ]+$/u;
+                // Regex hỗ trợ Tiếng Việt đầy đủ và dấu cách
+                const nameRegex = /^[A-Za-zÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠƯưăâêôơưẠ-ỹ ]+$/;
                 if (!nameRegex.test(name)) {
                     showError('profileForm', 'CustomerName', 'Họ tên chỉ được chứa chữ cái và khoảng trắng.');
                     return;
