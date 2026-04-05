@@ -13,13 +13,58 @@ namespace SV22T1020161.Shop.Controllers
     public class AccountController : Controller
     {
         /// <summary>
-        /// Endpoint test MD5 hash - xóa sau khi debug xong
+        /// Endpoint debug - xóa sau khi fix xong
+        /// GET: /Account/DebugPassword?email=xxx
         /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> DebugPassword(string email)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"=== DEBUG PASSWORD ===");
+            sb.AppendLine($"Email: {email}");
+            
+            // 1. Hash password test
+            var testPassword = "123123";
+            var testHash = SV22T1020161.BusinessLayers.CryptHelper.HashMD5(testPassword);
+            sb.AppendLine($"MD5('123123') = {testHash}");
+            
+            // 2. Lấy customer từ DB
+            var customers = await PartnerDataService.ListCustomersAsync(new SV22T1020161.Models.Common.PaginationSearchInput() 
+            { 
+                SearchValue = email, 
+                Page = 1, 
+                PageSize = 1 
+            });
+            
+            if (customers.DataItems.Any())
+            {
+                var customer = customers.DataItems.First();
+                sb.AppendLine($"\n--- Customer in DB ---");
+                sb.AppendLine($"CustomerID: {customer.CustomerID}");
+                sb.AppendLine($"Email: {customer.Email}");
+                sb.AppendLine($"Password in DB: '{customer.Password}'");
+                sb.AppendLine($"IsLocked: {customer.IsLocked}");
+                sb.AppendLine($"Password length in DB: {customer.Password?.Length ?? 0}");
+                
+                // 3. So sánh
+                if (customer.Password == testHash)
+                    sb.AppendLine("\n✓ Password KHỚP!");
+                else
+                    sb.AppendLine($"\n✗ Password KHÔNG khớp!");
+            }
+            else
+            {
+                sb.AppendLine("\n✗ Không tìm thấy customer với email này!");
+            }
+            
+            return Content(sb.ToString().Replace("\n", "<br/>"), "text/html");
+        }
+
         [HttpGet]
         public IActionResult TestMD5(string password = "123123")
         {
             var hash = SV22T1020161.BusinessLayers.CryptHelper.HashMD5(password);
-            return Content($"Password: '{password}' => MD5: '{hash}' (expected: '4297f44b13955235245b2497399d7a93')");
+            return Content($"Password: '{password}' => MD5: '{hash}'");
         }
 
         [HttpGet]
@@ -85,8 +130,6 @@ namespace SV22T1020161.Shop.Controllers
             {
                 data.ContactName = data.CustomerName;
                 data.IsLocked = false;
-                // Hash MD5 trước khi gửi xuống repository
-                data.Password = SV22T1020161.BusinessLayers.CryptHelper.HashMD5(data.Password ?? "");
                 await PartnerDataService.AddCustomerAsync(data);
 
                 TempData["SuccessMessage"] = "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";

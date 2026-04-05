@@ -24,7 +24,6 @@
                     <!-- Brand -->
                     <div class="text-center mb-5">
                         <a href="/" class="brand-logo justify-content-center">
-                            <span class="logo-icon"><i class="bi bi-bag-heart-fill"></i></span>
                             SV22T1020161<span style="color:var(--md-primary);">.</span>Shop
                         </a>
                         <h1 style="font-size:1.5rem;font-weight:700;margin-bottom:6px;">Chào mừng trở lại</h1>
@@ -46,36 +45,34 @@
                         </div>
                     }
 
-                    <form action="~/Account/Login" method="post" class="d-flex flex-column gap-4">
+                    <form id="loginForm" action="~/Account/Login" method="post" class="d-flex flex-column gap-4">
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
 
                         <!-- Email -->
                         <div class="md-form-group mb-0">
-                            <label class="md-label">Email</label>
+                            <label class="md-label">
+                                <span>Email <span style="color:var(--md-error);">*</span></span>
+                                <span class="md-error-message" id="error-email"></span>
+                            </label>
                             <div class="md-input-wrap">
                                 <i class="bi bi-envelope input-icon"></i>
-                                <input type="email" name="email" placeholder="example@gmail.com" required autofocus
+                                <input type="email" id="emailField" name="email" placeholder="example@gmail.com" autofocus
                                        value="@ViewData["Email"]" class="md-input" />
                             </div>
                         </div>
 
                         <!-- Password -->
                         <div class="md-form-group mb-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <label class="md-label mb-0">Mật khẩu</label>
-                                <a href="#" style="font-size:0.8125rem;color:var(--md-primary);font-weight:500;">Quên mật khẩu?</a>
-                            </div>
-                            <div class="md-input-wrap mt-2">
+                            <label class="md-label">
+                                <span>Mật khẩu <span style="color:var(--md-error);">*</span></span>
+                                <span class="md-error-message" id="error-password"></span>
+                            </label>
+                            <div class="md-input-wrap">
                                 <i class="bi bi-lock input-icon"></i>
-                                <input type="password" name="password" placeholder="Nhập mật khẩu" required class="md-input" />
+                                <input type="password" id="passwordField" name="password" placeholder="Nhập mật khẩu" class="md-input" />
                             </div>
                         </div>
 
-                        <!-- Remember Me -->
-                        <label class="md-checkbox mb-1">
-                            <input type="checkbox" name="rememberMe" value="true" />
-                            <span style="font-size:0.875rem;color:var(--md-on-surface-variant);">Duy trì đăng nhập</span>
-                        </label>
 
                         <!-- Submit -->
                         <button type="submit" class="md-btn md-btn-primary" style="padding:12px;font-size:1rem;font-weight:700;box-shadow:0 4px 12px rgba(103,80,164,.35);">
@@ -92,7 +89,7 @@
                     </div>
 
                     <!-- Register Link -->
-                    <div class="text-center">
+                    <div class="text-center d-flex flex-column gap-2">
                         <p class="text-muted-md mb-0" style="font-size:0.875rem;">
                             Chưa có tài khoản?
                             <a href="~/Account/Register?returnUrl=@returnUrl" style="font-weight:600;">Tạo tài khoản mới</a>
@@ -105,5 +102,37 @@
     </div>
 
     <script src="~/lib/bootstrap/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            let hasError = false;
+            const showError = (id, msg) => {
+                const errSpan = document.getElementById('error-' + id);
+                const input = document.getElementById(id + 'Field');
+                if (errSpan) errSpan.textContent = msg;
+                if (input) input.classList.add('is-invalid');
+                hasError = true;
+            };
+            const clearError = (id) => {
+                const errSpan = document.getElementById('error-' + id);
+                const input = document.getElementById(id + 'Field');
+                if (errSpan) errSpan.textContent = '';
+                if (input) input.classList.remove('is-invalid');
+            };
+
+            ['email', 'password'].forEach(clearError);
+
+            const email = document.getElementById('emailField').value.trim();
+            const pass = document.getElementById('passwordField').value;
+
+            if (!email) showError('email', 'Vui lòng nhập Email.');
+            else if (!email.includes('@@') || !email.includes('.')) showError('email', 'Email không hợp lệ.');
+
+            if (!pass) showError('password', 'Vui lòng nhập mật khẩu.');
+
+            if (hasError) {
+                e.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>
