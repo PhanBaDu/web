@@ -18,7 +18,7 @@ namespace SV22T1020161.Shop.Controllers
         [HttpGet]
         public IActionResult TestMD5(string password = "123123")
         {
-            var hash = SV22T1020161.BusinessLayers.CryptHelper.MD5Hash(password);
+            var hash = SV22T1020161.BusinessLayers.CryptHelper.HashMD5(password);
             return Content($"Password: '{password}' => MD5: '{hash}' (expected: '4297f44b13955235245b2497399d7a93')");
         }
 
@@ -60,20 +60,8 @@ namespace SV22T1020161.Shop.Controllers
                 ModelState.AddModelError(nameof(data.Password), "Vui lòng nhập mật khẩu.");
             else
             {
-                // TC-R1: Password strength - 1 chu hoa, 1 so, 1 ky tu dac biet, toi thieu 6 ky tu
-                var pw = data.Password;
-                bool hasUpper = pw.Any(char.IsUpper);
-                bool hasDigit = pw.Any(char.IsDigit);
-                bool hasSpecial = pw.Any(ch => !char.IsLetterOrDigit(ch));
-
-                if (pw.Length < 6)
+                if (data.Password.Length < 6)
                     ModelState.AddModelError(nameof(data.Password), "Mật khẩu phải có ít nhất 6 ký tự.");
-                else if (!hasUpper)
-                    ModelState.AddModelError(nameof(data.Password), "Mật khẩu phải chứa ít nhất 1 chữ HOA.");
-                else if (!hasDigit)
-                    ModelState.AddModelError(nameof(data.Password), "Mật khẩu phải chứa ít nhất 1 chữ số.");
-                else if (!hasSpecial)
-                    ModelState.AddModelError(nameof(data.Password), "Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt (!@#$...).");
             }
 
             if (data.Password != confirmPassword)
@@ -98,7 +86,7 @@ namespace SV22T1020161.Shop.Controllers
                 data.ContactName = data.CustomerName;
                 data.IsLocked = false;
                 // Hash MD5 trước khi gửi xuống repository
-                data.Password = CryptHelper.MD5Hash(data.Password ?? "");
+                data.Password = SV22T1020161.BusinessLayers.CryptHelper.HashMD5(data.Password ?? "");
                 await PartnerDataService.AddCustomerAsync(data);
 
                 TempData["SuccessMessage"] = "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";
@@ -132,7 +120,7 @@ namespace SV22T1020161.Shop.Controllers
             }
 
             // Shop dùng UserTypes.Customer — SecurityDataService sẽ hash password bên trong (1 lần)
-            var debugHash = SV22T1020161.BusinessLayers.CryptHelper.MD5Hash(password);
+            var debugHash = SV22T1020161.BusinessLayers.CryptHelper.HashMD5(password);
             System.Diagnostics.Debug.WriteLine($"[DEBUG] Login: email={email}, password={password}, hash={debugHash}");
             var account = await SecurityDataService.AuthorizeAsync(email, password, UserTypes.Customer);
             if (account == null)
@@ -193,31 +181,34 @@ namespace SV22T1020161.Shop.Controllers
 
         [Authorize]
         [HttpPost]
+        [Authorize]
+        [HttpPost]
         public async Task<IActionResult> UpdateProfile(Customer model)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId))
-                return RedirectToAction("Login");
+                return Json(new { success = false, message = "Vui lòng đăng nhập lại." });
 
             var customer = await PartnerDataService.GetCustomerAsync(userId);
             if (customer == null)
-                return RedirectToAction("Login");
+                return Json(new { success = false, message = "Không tìm thấy khách hàng." });
 
-            // Validate
+            // Validate Name: Only letters and spaces, at least 2 chars
             if (string.IsNullOrWhiteSpace(model.CustomerName))
-            {
-                TempData["ErrorMessage"] = "Họ tên không được để trống.";
-                return RedirectToAction("Profile");
-            }
+                return Json(new { success = false, message = "Họ tên không được để trống.", field = "CustomerName" });
+            
+            var nameRegex = new System.Text.RegularExpressions.Regex(@"^[p{L}s]+$");
+            if (!nameRegex.IsMatch(model.CustomerName))
+                return Json(new { success = false, message = "Họ tên chỉ được chứa chữ cái.", field = "CustomerName" });
+
+            if (model.CustomerName.Trim().Length < 2)
+                return Json(new { success = false, message = "Họ tên phải từ 2 ký tự.", field = "CustomerName" });
 
             if (!string.IsNullOrWhiteSpace(model.Phone))
             {
                 string digits = new string(model.Phone.Where(char.IsDigit).ToArray());
-                if (digits.Length < 10 || digits.Length > 11)
-                {
-                    TempData["ErrorMessage"] = "Số điện thoại phải từ 10-11 chữ số.";
-                    return RedirectToAction("Profile");
-                }
+                if (digits.Length < 10 || digits.Length > 11 || digits.Length != model.Phone.Length)
+                    return Json(new { success = false, message = "Số điện thoại phải từ 10-11 chữ số.", field = "Phone" });
             }
 
             customer.CustomerName = model.CustomerName.Trim();
@@ -229,8 +220,6 @@ namespace SV22T1020161.Shop.Controllers
             bool ok = await PartnerDataService.UpdateCustomerAsync(customer);
             if (ok)
             {
-                TempData["SuccessMessage"] = "Cập nhật thông tin cá nhân thành công!";
-
                 var userData = new WebUserData
                 {
                     UserId = customer.CustomerID.ToString(),
@@ -240,13 +229,10 @@ namespace SV22T1020161.Shop.Controllers
                     Roles = new List<string> { "customer" }
                 };
                 await HttpContext.SignInAsync(userData.CreatePrincipal());
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Cập nhật thông tin thất bại. Vui lòng thử lại.";
+                return Json(new { success = true, message = "Cập nhật thông tin cá nhân thành công!" });
             }
 
-            return RedirectToAction("Profile");
+            return Json(new { success = false, message = "Cập nhật thông tin thất bại. Vui lòng thử lại." });
         }
 
         [Authorize]
@@ -254,50 +240,27 @@ namespace SV22T1020161.Shop.Controllers
         public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
-            {
-                TempData["ErrorMessage"] = "Vui lòng điền đầy đủ tất cả các trường.";
-                return RedirectToAction("Profile");
-            }
+                return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin." });
 
             if (newPassword != confirmPassword)
-            {
-                TempData["ErrorMessage"] = "Mật khẩu xác nhận không khớp.";
-                return RedirectToAction("Profile");
-            }
+                return Json(new { success = false, message = "Mật khẩu xác nhận không khớp.", field = "confirmPassword" });
 
-            var pw = newPassword;
-            bool hasUpper = pw.Any(char.IsUpper);
-            bool hasDigit = pw.Any(char.IsDigit);
-            bool hasSpecial = pw.Any(ch => !char.IsLetterOrDigit(ch));
-
-            if (pw.Length < 6)
-            {
-                TempData["ErrorMessage"] = "Mật khẩu mới phải có ít nhất 6 ký tự.";
-                return RedirectToAction("Profile");
-            }
-            if (!hasUpper || !hasDigit || !hasSpecial)
-            {
-                TempData["ErrorMessage"] = "Mật khẩu mới phải chứa chữ HOA, chữ số và ký tự đặc biệt.";
-                return RedirectToAction("Profile");
-            }
+            if (newPassword.Length < 6)
+                return Json(new { success = false, message = "Mật khẩu mới phải có ít nhất 6 ký tự.", field = "newPassword" });
 
             var email = User.Identity?.Name;
             if (string.IsNullOrEmpty(email))
-                return RedirectToAction("Login");
+                return Json(new { success = false, message = "Vui lòng đăng nhập lại." });
 
-            // Kiem tra mat khau cu (so sanh voi hash trong DB)
-            var account = await SecurityDataService.AuthorizeAsync(email, CryptHelper.MD5Hash(oldPassword), UserTypes.Customer);
+            var account = await SecurityDataService.AuthorizeAsync(email, oldPassword, UserTypes.Customer);
             if (account == null)
-            {
-                TempData["ErrorMessage"] = "Mật khẩu cũ không chính xác.";
-                return RedirectToAction("Profile");
-            }
+                return Json(new { success = false, message = "Mật khẩu cũ không chính xác.", field = "oldPassword" });
 
-            bool result = await SecurityDataService.ChangePasswordAsync(email, CryptHelper.MD5Hash(newPassword), UserTypes.Customer);
-            TempData[result ? "SuccessMessage" : "ErrorMessage"] =
-                result ? "Đổi mật khẩu thành công!" : "Đã có lỗi xảy ra khi đổi mật khẩu.";
-
-            return RedirectToAction("Profile");
+            bool result = await SecurityDataService.ChangePasswordAsync(email, newPassword, UserTypes.Customer);
+            return Json(new { 
+                success = result, 
+                message = result ? "Đổi mật khẩu thành công!" : "Đã có lỗi xảy ra khi đổi mật khẩu." 
+            });
         }
 
         [HttpGet]

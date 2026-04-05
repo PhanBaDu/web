@@ -560,8 +560,8 @@ a:hover { color: var(--md-on-primary-container); }
   font-size: 0.9375rem;
   color: var(--md-on-surface);
   background-color: var(--md-surface);
-  border: 1px solid var(--md-outline);
-  border-radius: var(--md-radius-xs);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-radius-md);
   transition: border-color 0.15s, box-shadow 0.15s;
   -webkit-appearance: none;
   appearance: none;
@@ -572,7 +572,7 @@ a:hover { color: var(--md-on-primary-container); }
 .md-input:focus {
   outline: none;
   border-color: var(--md-primary);
-  box-shadow: 0 0 0 3px var(--md-primary-light);
+  box-shadow: 0 0 0 3px var(--md-primary-container);
 }
 
 .md-input:disabled {
@@ -634,14 +634,29 @@ a:hover { color: var(--md-on-primary-container); }
   box-shadow: 0 0 0 3px var(--md-error-container);
 }
 
+/* Label with potential error on the right */
+.md-label {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--md-on-surface-variant);
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
 .md-error-message {
-  display: block;
   font-size: 0.75rem;
   color: var(--md-error);
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-weight: 500;
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 /* Select */
@@ -653,16 +668,22 @@ a:hover { color: var(--md-on-primary-container); }
   font-size: 0.9375rem;
   color: var(--md-on-surface);
   background-color: var(--md-surface);
-  border: 1px solid var(--md-outline);
-  border-radius: var(--md-radius-xs);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-radius-md);
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2379747E' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236750A4' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 12px center;
   background-repeat: no-repeat;
   background-size: 20px;
   padding-right: 40px;
+}
+
+.md-select:focus {
+  outline: none;
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 3px var(--md-primary-container);
 }
 
 .md-select:focus {

@@ -6,9 +6,6 @@
 <div class="animate-in">
     <!-- Page Header -->
     <div class="page-header mb-5">
-        <div class="page-header-icon">
-            <i class="bi bi-person-gear" style="font-size:1.25rem;"></i>
-        </div>
         <div>
             <h1 style="font-size:1.75rem;font-weight:800;">Tài khoản của tôi</h1>
             <p class="text-muted-md mb-0" style="font-size:0.875rem;">Quản lý thông tin cá nhân và bảo mật</p>
@@ -94,8 +91,11 @@
                             <!-- Full Name -->
                             <div class="col-md-6">
                                 <div class="md-form-group mb-0">
-                                    <label class="md-label">Họ và tên</label>
-                                    <input type="text" name="CustomerName" value="@Model?.CustomerName" class="md-input" />
+                                    <label class="md-label">
+                                        <span>Họ và tên</span>
+                                        <span class="md-error-message" id="error-CustomerName"></span>
+                                    </label>
+                                    <input type="text" id="CustomerName" name="CustomerName" value="@Model?.CustomerName" class="md-input" />
                                 </div>
                             </div>
                             <!-- Email (Read-only) -->
@@ -108,8 +108,11 @@
                             <!-- Phone -->
                             <div class="col-md-6">
                                 <div class="md-form-group mb-0">
-                                    <label class="md-label">Số điện thoại</label>
-                                    <input type="tel" name="Phone" value="@Model?.Phone" class="md-input" />
+                                    <label class="md-label">
+                                        <span>Số điện thoại</span>
+                                        <span class="md-error-message" id="error-Phone"></span>
+                                    </label>
+                                    <input type="tel" id="Phone" name="Phone" value="@Model?.Phone" class="md-input" />
                                 </div>
                             </div>
                             <!-- Province -->
@@ -151,30 +154,54 @@
                     </div>
                 </div>
                 <div class="md-card-body">
-                    <form action="~/Account/ChangePassword" method="post" class="d-flex flex-column gap-4" style="max-width:480px;">
+                    <form id="changePasswordForm" action="~/Account/ChangePassword" method="post" class="d-flex flex-column gap-4" style="max-width:480px;">
                         <div class="md-form-group mb-0">
-                            <label class="md-label">Mật khẩu hiện tại</label>
+                            <label class="md-label">
+                                <span>Mật khẩu hiện tại</span>
+                                <span class="md-error-message" id="error-oldPassword">
+                                    @if (TempData["ErrorMessage"]?.ToString() == "Mật khẩu cũ không chính xác.") { @TempData["ErrorMessage"] }
+                                </span>
+                            </label>
                             <div class="md-input-wrap">
                                 <i class="bi bi-lock input-icon"></i>
-                                <input type="password" name="oldPassword" placeholder="Nhập mật khẩu hiện tại" required class="md-input" />
+                                <input type="password" id="oldPassword" name="oldPassword" placeholder="Nhập mật khẩu hiện tại" required class="md-input @(TempData["ErrorMessage"]?.ToString() == "Mật khẩu cũ không chính xác." ? "is-invalid" : "")" style="padding-right: 44px;" />
+                                <button type="button" class="password-toggle" onclick="togglePassword(this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="md-form-group mb-0">
-                            <label class="md-label">Mật khẩu mới</label>
+                            <label class="md-label">
+                                <span>Mật khẩu mới</span>
+                                <span class="md-error-message" id="error-newPassword">
+                                    @if (TempData["ErrorMessage"]?.ToString() == "Mật khẩu mới phải có ít nhất 6 ký tự.") { @TempData["ErrorMessage"] }
+                                </span>
+                            </label>
                             <div class="md-input-wrap">
                                 <i class="bi bi-key input-icon"></i>
-                                <input type="password" name="newPassword" placeholder="Tối thiểu 6 ký tự" required minlength="6" class="md-input" />
+                                <input type="password" id="newPassword" name="newPassword" placeholder="Tối thiểu 6 ký tự" required minlength="6" class="md-input @(TempData["ErrorMessage"]?.ToString() == "Mật khẩu mới phải có ít nhất 6 ký tự." ? "is-invalid" : "")" style="padding-right: 44px;" />
+                                <button type="button" class="password-toggle" onclick="togglePassword(this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="md-form-group mb-0">
-                            <label class="md-label">Xác nhận mật khẩu mới</label>
+                            <label class="md-label">
+                                <span>Xác nhận mật khẩu mới</span>
+                                <span class="md-error-message" id="error-confirmPassword">
+                                    @if (TempData["ErrorMessage"]?.ToString() == "Mật khẩu xác nhận không khớp.") { @TempData["ErrorMessage"] }
+                                </span>
+                            </label>
                             <div class="md-input-wrap">
                                 <i class="bi bi-shield-check input-icon"></i>
-                                <input type="password" name="confirmPassword" placeholder="Nhập lại mật khẩu mới" required class="md-input" />
+                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu mới" required class="md-input @(TempData["ErrorMessage"]?.ToString() == "Mật khẩu xác nhận không khớp." ? "is-invalid" : "")" style="padding-right: 44px;" />
+                                <button type="button" class="password-toggle" onclick="togglePassword(this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
                         </div>
                         <div>
-                            <button type="submit" class="md-btn md-btn-outlined">
+                            <button type="submit" class="md-btn md-btn-primary">
                                 <i class="bi bi-key"></i> Cập nhật mật khẩu
                             </button>
                         </div>
@@ -196,5 +223,155 @@
                 }
             });
         });
+
+        function togglePassword(btn) {
+            const input = btn.parentElement.querySelector('input');
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+
+        const cpForm = document.getElementById('changePasswordForm');
+        const pfForm = document.getElementById('profileForm');
+
+        function showError(formId, id, msg) {
+            const errSpan = document.getElementById('error-' + id);
+            const input = document.getElementById(id);
+            if (errSpan) errSpan.textContent = msg;
+            if (input) input.classList.add('is-invalid');
+        }
+        function clearErrors(formId, fields) {
+            fields.forEach(id => {
+                const errSpan = document.getElementById('error-' + id);
+                const input = document.getElementById(id);
+                if (errSpan) errSpan.textContent = '';
+                if (input) input.classList.remove('is-invalid');
+            });
+        }
+        function showToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast-container';
+            const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+            const alertClass = type === 'success' ? 'md-alert-success' : 'md-alert-error';
+            toast.innerHTML = `<div class="md-alert ${alertClass}" style="position:fixed;bottom:24px;right:24px;z-index:9999;min-width:280px;animation:fadeInUp 0.3s ease"><i class="bi ${icon}"></i><div>${msg}</div></div>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        if (pfForm) {
+            pfForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fields = ['CustomerName', 'Phone'];
+                clearErrors('profileForm', fields);
+                const data = new FormData(pfForm);
+                const name = data.get('CustomerName');
+                const phone = data.get('Phone');
+                
+                if (!name) {
+                    showError('profileForm', 'CustomerName', 'Họ tên không được để trống.');
+                    return;
+                }
+                const nameRegex = /^[p{L}s]+$/u;
+                if (!nameRegex.test(name)) {
+                    showError('profileForm', 'CustomerName', 'Họ tên chỉ được chứa chữ cái.');
+                    return;
+                }
+                if (name.trim().length < 2) {
+                    showError('profileForm', 'CustomerName', 'Họ tên phải từ 2 ký tự.');
+                    return;
+                }
+
+                if (phone) {
+                    const phoneRegex = /^[0-9]{10,11}$/;
+                    if (!phoneRegex.test(phone)) {
+                        showError('profileForm', 'Phone', 'Số điện thoại phải từ 10-11 chữ số.');
+                        return;
+                    }
+                }
+
+                fetch(pfForm.action, {
+                    method: 'POST',
+                    body: new URLSearchParams(data)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        showToast(res.message);
+                    } else {
+                        if (res.field) showError('profileForm', res.field, res.message);
+                        else showToast(res.message, 'error');
+                    }
+                })
+                .catch(() => showToast('Lỗi kết nối server.', 'error'));
+            });
+        }
+
+        if (cpForm) {
+            cpForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const fields = ['oldPassword', 'newPassword', 'confirmPassword'];
+                clearErrors('changePasswordForm', fields);
+
+                const data = new FormData(cpForm);
+                const oldPass = data.get('oldPassword');
+                const newPass = data.get('newPassword');
+                const confirmPass = data.get('confirmPassword');
+
+                let hasError = false;
+                if (!oldPass) { showError('changePasswordForm', 'oldPassword', 'Vui lòng nhập mật khẩu cũ.'); hasError = true; }
+                if (newPass.length < 6) { showError('changePasswordForm', 'newPassword', 'Mật khẩu mới phải từ 6 ký tự.'); hasError = true; }
+                else if (newPass !== confirmPass) { showError('changePasswordForm', 'confirmPassword', 'Mật khẩu xác nhận không khớp.'); hasError = true; }
+
+                if (hasError) return;
+
+                fetch(cpForm.action, {
+                    method: 'POST',
+                    body: new URLSearchParams(data)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        showToast(res.message);
+                        cpForm.reset();
+                    } else {
+                        if (res.field) showError('changePasswordForm', res.field, res.message);
+                        else showToast(res.message, 'error');
+                    }
+                })
+                .catch(() => showToast('Lỗi kết nối server.', 'error'));
+            }, true);
+        }
     </script>
+    <style>
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--md-outline);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s;
+        }
+        .password-toggle:hover {
+            color: var(--md-primary);
+        }
+        .md-input-wrap .input-icon {
+            left: 14px;
+            z-index: 2;
+        }
+        .md-input-wrap .md-input {
+            padding-left: 44px;
+        }
+    </style>
 }

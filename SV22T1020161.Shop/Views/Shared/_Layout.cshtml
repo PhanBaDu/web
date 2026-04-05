@@ -120,17 +120,6 @@
             </div>
         }
 
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="container mt-4">
-                <div class="md-alert md-alert-error" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.25rem;"></i>
-                    <div>@TempData["ErrorMessage"]</div>
-                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </div>
-        }
-
         <div class="container py-4">
             @RenderBody()
         </div>

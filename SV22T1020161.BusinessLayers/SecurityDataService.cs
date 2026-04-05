@@ -31,7 +31,7 @@ namespace SV22T1020161.BusinessLayers
         /// <returns>Thông tin tài khoản nếu hợp lệ; ngược lại trả về null</returns>
         public static async Task<UserAccount?> AuthorizeAsync(string userName, string password, UserTypes userType)
         {
-            string hashedPwd = CryptHelper.MD5Hash(password);
+            string hashedPwd = CryptHelper.HashMD5(password);
             if (userType == UserTypes.Employee)
                 return await userAccountDB.AuthorizeAsync(userName, hashedPwd);
             else
@@ -47,7 +47,7 @@ namespace SV22T1020161.BusinessLayers
         /// <returns>True nếu thành công</returns>
         public static async Task<bool> ChangePasswordAsync(string userName, string password, UserTypes userType)
         {
-            string hashedPwd = CryptHelper.MD5Hash(password);
+            string hashedPwd = CryptHelper.HashMD5(password);
             if (userType == UserTypes.Employee)
                 return await userAccountDB.ChangePasswordAsync(userName, hashedPwd);
             else
