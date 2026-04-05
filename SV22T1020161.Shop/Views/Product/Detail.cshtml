@@ -35,7 +35,7 @@
         <div class="md-card mb-3" style="overflow:hidden;">
             <div class="product-img-zoom" id="mainImageWrapper"
                  onmousemove="zoomImage(event)" onmouseleave="resetZoom()">
-                <div style="aspect-ratio:1; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--md-surface-container-low);">
+                <div style="aspect-ratio:1; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#ffffff;">
                     <img id="mainProductImage"
                          src="@MainUrl()"
                          alt="@Model.ProductName"
@@ -167,8 +167,8 @@
                             @foreach (var attr in attrs.OrderBy(a => a.DisplayOrder))
                             {
                                 <tr>
-                                    <td style="padding:12px 20px;color:var(--md-on-surface-variant);font-weight:500;width:40%;">@attr.AttributeName</td>
-                                    <td style="padding:12px 20px;color:var(--md-on-surface);">@attr.AttributeValue</td>
+                                    <td style="padding:16px 24px;color:var(--md-on-surface-variant);font-weight:600;width:35%;font-size:1rem;">@attr.AttributeName</td>
+                                    <td style="padding:16px 24px;color:var(--md-on-surface);font-size:1rem;font-weight:500;">@attr.AttributeValue</td>
                                 </tr>
                             }
                         </tbody>

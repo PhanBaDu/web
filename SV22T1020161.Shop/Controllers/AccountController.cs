@@ -197,9 +197,9 @@ namespace SV22T1020161.Shop.Controllers
             if (string.IsNullOrWhiteSpace(model.CustomerName))
                 return Json(new { success = false, message = "Họ tên không được để trống.", field = "CustomerName" });
             
-            var nameRegex = new System.Text.RegularExpressions.Regex(@"^[p{L}s]+$");
+            var nameRegex = new System.Text.RegularExpressions.Regex(@"^[\p{L} ]+$");
             if (!nameRegex.IsMatch(model.CustomerName))
-                return Json(new { success = false, message = "Họ tên chỉ được chứa chữ cái.", field = "CustomerName" });
+                return Json(new { success = false, message = "Họ tên chỉ được chứa chữ cái và khoảng trắng.", field = "CustomerName" });
 
             if (model.CustomerName.Trim().Length < 2)
                 return Json(new { success = false, message = "Họ tên phải từ 2 ký tự.", field = "CustomerName" });

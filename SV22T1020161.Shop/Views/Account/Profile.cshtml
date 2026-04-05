@@ -276,9 +276,9 @@
                     showError('profileForm', 'CustomerName', 'Họ tên không được để trống.');
                     return;
                 }
-                const nameRegex = /^[p{L}s]+$/u;
+                const nameRegex = /^[\p{L} ]+$/u;
                 if (!nameRegex.test(name)) {
-                    showError('profileForm', 'CustomerName', 'Họ tên chỉ được chứa chữ cái.');
+                    showError('profileForm', 'CustomerName', 'Họ tên chỉ được chứa chữ cái và khoảng trắng.');
                     return;
                 }
                 if (name.trim().length < 2) {
